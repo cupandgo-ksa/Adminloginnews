@@ -1,248 +1,136 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cup And Go - Smart Loyalty</title>
+    <title>Cup And Go - بطاقة الولاء</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background: #0e0e11; color: #1e1e24; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow-x: hidden; }
-        .app-container { width: 100%; max-width: 410px; min-height: 100vh; background: #f8f9fa; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0,0,0,0.4); }
-        
-        /* 1. Niqati Style Splash Screen */
-        #splashScreen { position: fixed; inset: 0; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 60px 20px 40px; transition: opacity 0.5s ease; }
-        .splash-center { text-align: center; margin-top: auto; margin-bottom: auto; }
-        .splash-icon-box { width: 110px; height: 110px; background: linear-gradient(135deg, #ff7a00, #ff4500); border-radius: 32px; display: inline-flex; justify-content: center; align-items: center; font-size: 55px; box-shadow: 0 15px 35px rgba(255,100,0,0.35); animation: popScale 1.4s infinite alternate ease-in-out; }
-        .splash-title { font-size: 32px; font-weight: 800; color: #1a1a24; margin-top: 24px; letter-spacing: -0.5px; }
-        .splash-subtitle { font-size: 14px; color: #71717a; margin-top: 6px; }
-        .splash-dots { display: flex; gap: 8px; justify-content: center; margin-top: 25px; }
-        .splash-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff7a00; }
-        .splash-dot:nth-child(2) { opacity: 0.5; }
-        .splash-dot:nth-child(3) { opacity: 0.25; }
-        @keyframes popScale { 0% { transform: scale(0.96); } 100% { transform: scale(1.04); } }
+        * { box-sizing: border-box; font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background: #ffffff; color: #1e1e24; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
+        .app-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; }
 
-        /* Top Header Visual (Orange Curve) */
-        .header-bg { height: 190px; background: linear-gradient(135deg, #ff7a00, #ff4500); position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; border-bottom-left-radius: 36px; border-bottom-right-radius: 36px; padding: 0 20px; box-shadow: 0 10px 25px rgba(255,85,0,0.25); }
-        .header-logo-badge { width: 68px; height: 68px; background: white; border-radius: 22px; display: flex; justify-content: center; align-items: center; font-size: 34px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); margin-bottom: 8px; }
-        .header-title { color: white; font-size: 20px; font-weight: 800; }
+        /* Arabic Popup Welcome / Success Animation */
+        #arabicModalBanner { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: none; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.3s ease; }
+        .arabic-card { background: #3b231d; color: white; border-radius: 26px; padding: 30px 22px; text-align: center; border: 1.5px solid rgba(255,255,255,0.2); box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 320px; }
+        .arabic-icon { font-size: 50px; margin-bottom: 12px; animation: bounce 1.2s infinite alternate; }
+        .arabic-title { font-size: 22px; font-weight: 800; color: #ffffff; margin-bottom: 6px; }
+        .arabic-sub { font-size: 14px; color: #d7ccc8; line-height: 1.5; margin-bottom: 18px; }
+        .btn-close-ar { background: #ffffff; color: #3b231d; font-weight: 800; border: none; padding: 10px 24px; border-radius: 12px; font-size: 14px; cursor: pointer; }
 
-        /* Content Card */
-        .content-body { flex: 1; padding: 20px 22px 30px; margin-top: -20px; border-radius: 28px; background: #ffffff; z-index: 10; box-shadow: 0 -8px 25px rgba(0,0,0,0.03); }
-        .page-title { font-size: 24px; font-weight: 800; color: #18181b; margin-bottom: 4px; }
-        .page-sub { font-size: 13px; color: #71717a; margin-bottom: 22px; }
+        @keyframes popScale { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
 
-        /* Inputs & Buttons */
-        .input-group { margin-bottom: 14px; text-align: left; }
-        .input-label { font-size: 12px; font-weight: 700; color: #52525b; margin-bottom: 6px; display: block; }
-        .form-input, .form-select { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1.5px solid #e4e4e7; background: #f4f4f5; color: #18181b; font-size: 14px; font-weight: 600; outline: none; transition: all 0.25s; }
-        .form-input:focus, .form-select:focus { border-color: #ff5500; background: #ffffff; box-shadow: 0 0 0 4px rgba(255,85,0,0.1); }
-        
-        .btn { width: 100%; padding: 15px; border-radius: 14px; font-weight: 700; font-size: 15px; border: none; cursor: pointer; transition: transform 0.2s, opacity 0.2s; margin-top: 6px; }
-        .btn:active { transform: scale(0.98); }
-        .btn-orange { background: linear-gradient(135deg, #ff7a00, #ff4500); color: white; box-shadow: 0 8px 22px rgba(255,85,0,0.35); }
-        .btn-light { background: #f4f4f5; color: #52525b; font-size: 13px; margin-top: 10px; }
+        /* Broadcast Notification Alert */
+        #liveNotifBanner { background: #3b231d; color: white; padding: 14px 16px; border-radius: 16px; margin-bottom: 14px; display: none; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px rgba(59,35,29,0.2); }
 
-        /* Loyalty Pass Card */
-        .loyalty-card { background: #231714; color: white; border-radius: 22px; padding: 22px 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.25); text-align: center; margin-bottom: 20px; transition: background 0.3s; }
-        .stamps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
-        .stamp-slot { aspect-ratio: 1; border-radius: 14px; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #a1a1aa; }
-        .stamp-slot.active { background: #ff5500; border: 1.5px solid #ff5500; color: white; box-shadow: 0 6px 16px rgba(255,85,0,0.45); }
-        .qr-wrapper { background: white; padding: 12px; border-radius: 16px; display: inline-block; margin-top: 5px; }
+        /* Loyalty Card */
+        .loyalty-card { background: #3b231d; color: #ffffff; border-radius: 26px; padding: 26px 20px; box-shadow: 0 16px 36px rgba(59,35,29,0.25); text-align: center; }
+        .brand-title { font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; }
+        .brand-sub { font-size: 13px; color: #d7ccc8; margin-top: 4px; font-weight: 500; }
+        .status-txt { font-size: 13px; color: #f5ebe6; margin-top: 10px; font-weight: 700; }
 
-        /* Analytics Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
-        .stat-item { background: #f4f4f5; padding: 14px; border-radius: 14px; border: 1px solid #e4e4e7; text-align: left; }
-        .stat-lbl { font-size: 11px; font-weight: 700; color: #71717a; text-transform: uppercase; }
-        .stat-val { font-size: 22px; font-weight: 800; color: #ff5500; margin-top: 4px; }
+        /* Stamp Grid */
+        .stamps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0 16px; }
+        .stamp-slot { aspect-ratio: 1; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; transition: all 0.3s; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(255,255,255,0.2); color: rgba(255,255,255,0.25); opacity: 0.35; }
+        .stamp-slot.active { background: #ffffff; border: 1.5px solid #ffffff; color: #3b231d; opacity: 1; box-shadow: 0 6px 16px rgba(0,0,0,0.3); transform: scale(1.04); }
 
-        /* Staff & Tab Navigation */
-        .nav-pills { display: flex; gap: 6px; background: #f4f4f5; padding: 4px; border-radius: 12px; margin-bottom: 18px; }
-        .nav-pill { flex: 1; padding: 9px; font-size: 12px; font-weight: 700; color: #71717a; background: transparent; border: none; border-radius: 9px; cursor: pointer; }
-        .nav-pill.active { background: #ff5500; color: white; box-shadow: 0 4px 12px rgba(255,85,0,0.3); }
-        .staff-card { background: #f4f4f5; padding: 12px 14px; border-radius: 14px; margin-bottom: 8px; border: 1px solid #e4e4e7; }
-        .perm-badges { display: flex; gap: 8px; font-size: 11px; font-weight: 600; color: #52525b; margin-top: 6px; }
+        .qr-card { background: #ffffff; padding: 12px; border-radius: 18px; display: inline-block; margin-top: 5px; box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+        .qr-help { font-size: 12px; color: #d7ccc8; margin-top: 8px; font-weight: 600; }
+
+        .staff-btn { background: none; border: none; color: #8d7b77; font-size: 12px; font-weight: 700; margin-top: 15px; cursor: pointer; text-align: center; }
+
+        /* Modals */
+        .modal-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 1000; display: none; justify-content: center; align-items: flex-end; }
+        .modal-body { width: 100%; max-width: 400px; background: white; border-top-left-radius: 28px; border-top-right-radius: 28px; padding: 25px 20px 35px; max-height: 85vh; overflow-y: auto; text-align: right; }
+        input, select, textarea { width: 100%; padding: 13px 15px; border-radius: 12px; border: 1.5px solid #e0d8d5; background: #faf7f6; margin-bottom: 12px; font-size: 14px; outline: none; color: #3b231d; font-family: inherit; }
+        .btn-full { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .btn-brown { background: #3b231d; color: white; }
     </style>
 </head>
 <body>
 
+<!-- Arabic Welcome / Stamp Animation Modal -->
+<div id="arabicModalBanner">
+    <div class="arabic-card">
+        <div class="arabic-icon">☕✨</div>
+        <div class="arabic-title">Cup And Go</div>
+        <div class="arabic-sub" id="arModalSub">أهلاً بك في كب آند جو! تم تفعيل بطاقتك بنجاح. اجمع الأكواب واحصل على مشروبك المجاني! 🎁</div>
+        <button class="btn-close-ar" onclick="closeArBanner()">استمرار / Continue</button>
+    </div>
+</div>
+
 <div class="app-container">
-    <!-- 1. Niqati Style Splash Screen -->
-    <div id="splashScreen">
-        <div class="splash-center">
-            <div class="splash-icon-box" id="splashLogo">☕</div>
-            <div class="splash-title" id="splashBrand">Cup And Go</div>
-            <p class="splash-subtitle" id="splashOffer">Keep your customers coming back</p>
-            <div class="splash-dots">
-                <div class="splash-dot"></div>
-                <div class="splash-dot"></div>
-                <div class="splash-dot"></div>
+
+    <!-- Broadcast Notification Alert -->
+    <div id="liveNotifBanner">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:20px;">📢</span>
+            <div>
+                <div style="font-size:11px; color:#d7ccc8; font-weight:700;" id="notifTitle">Cup And Go - عرض خاص</div>
+                <div style="font-size:12px; font-weight:600;" id="notifBody">مرحباً بكم في كب آند جو!</div>
             </div>
         </div>
-        <div style="font-size:11px; font-weight:800; color:#a1a1aa; letter-spacing:1.5px;">SMART LOYALTY PLATFORM</div>
+        <button onclick="document.getElementById('liveNotifBanner').style.display='none'" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;">✕</button>
     </div>
 
-    <!-- Header Graphic -->
-    <div class="header-bg">
-        <div class="header-logo-badge" id="uiHeaderIcon">☕</div>
-        <div class="header-title" id="uiHeaderName">Cup And Go</div>
+    <!-- Customer Card -->
+    <div class="loyalty-card">
+        <div class="brand-title">Cup And Go</div>
+        <div class="brand-sub">كب آند جو • اجمع الأكواب واحصل على مشروب مجاني! 🎁</div>
+        <div class="status-txt">الأكواب المكتملة: <b id="lblCollectedCount" style="color:#ffffff;">0</b> / <span id="lblTotalGoal">8</span></div>
+
+        <!-- Dynamic Stamps Grid -->
+        <div class="stamps-grid" id="stampsContainer"></div>
+
+        <!-- Customer QR Box -->
+        <div class="qr-card">
+            <div id="qrcode"></div>
+        </div>
+        <p class="qr-help">أظهر هذا الرمز للكاشير في Cup And Go عند كل طلب</p>
     </div>
 
-    <!-- Main Content Body -->
-    <div class="content-body">
-        
-        <!-- 1. Customer Login View -->
-        <div id="viewCustomerLogin">
-            <div class="page-title">Sign In</div>
-            <div class="page-sub">Enter details to open your digital loyalty card</div>
+    <button class="staff-btn" onclick="openStaffLogin()">⚙️ لوحة تحكم الموظف / المالك (Cup And Go)</button>
 
-            <div class="input-group">
-                <label class="input-label">Customer Name</label>
-                <input type="text" class="form-input" id="inCustName" placeholder="e.g. Ashik">
+    <!-- Scanner Modal -->
+    <div class="modal-screen" id="modalScanner">
+        <div class="modal-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-weight:800; color:#3b231d;">📷 ماسح الكاشير</h3>
+                <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
             </div>
-            <div class="input-group">
-                <label class="input-label">Mobile Number</label>
-                <input type="tel" class="form-input" id="inCustPhone" placeholder="05XXXXXXXX">
+            <div id="reader" style="border-radius:14px; overflow:hidden; margin-bottom:12px;"></div>
+            <div id="scanResultBox" style="display:none; background:#faf7f6; padding:15px; border-radius:14px; margin-top:8px; border:1px solid #e0d8d5;">
+                <p style="font-size:12px; color:#7d6b67;">معرف العميل: <b id="resCustId" style="color:#3b231d;"></b></p>
+                <p style="font-size:22px; font-weight:800; color:#3b231d; margin:4px 0;">الأكواب: <span id="resStamps">0</span></p>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button class="btn-full btn-brown" onclick="addCupToCustomer()">➕ إضافة كوب ☕</button>
+                    <button class="btn-full" style="background:#dc2626; color:white;" onclick="redeemReward()">🎁 استبدال المكافأة</button>
+                </div>
             </div>
-            <button class="btn btn-orange" onclick="handleCustLogin()">Open My Pass 🎁</button>
-            <button class="btn btn-light" onclick="openStaffModal()">🔒 Owner / Staff Login</button>
+            <button class="btn-full" style="background:#ede7e4; color:#3b231d; margin-top:10px;" onclick="openBroadcastModal()">📢 إرسال رسالة للجميع</button>
         </div>
-
-        <!-- 2. Customer Digital Pass View -->
-        <div id="viewCustomerPass" style="display:none;">
-            <div class="loyalty-card" id="passCardContainer">
-                <div style="font-size: 20px; font-weight: 800;" id="passBrandName">Cup And Go</div>
-                <div style="font-size: 12px; color: #d4d4d8; margin-top: 2px;" id="passOfferText">Collect stamps & get free drinks!</div>
-
-                <div class="stamps-grid" id="stampsGrid"></div>
-
-                <div class="qr-wrapper"><div id="qrcode"></div></div>
-                <p style="font-size: 11px; color: #a1a1aa; margin-top: 6px;">Show this QR code at checkout</p>
-            </div>
-            <button class="btn btn-light" onclick="logoutCustomer()">Switch / Logout</button>
-        </div>
-
-        <!-- 3. Owner & Staff Hub View -->
-        <div id="viewAdminHub" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                <div>
-                    <div style="font-size:11px; color:#71717a; font-weight:700;">Role: <b id="lblAdminRole" style="color:#ff5500;"></b></div>
-                    <div style="font-size:15px; font-weight:800; color:#18181b;" id="lblAdminName"></div>
-                </div>
-                <button class="btn btn-light" style="width:auto; margin:0; padding:6px 12px;" onclick="logoutAdmin()">Logout</button>
-            </div>
-
-            <div class="nav-pills">
-                <button class="nav-pill active" id="pillScan" onclick="switchAdminTab('scan')">📷 Scan</button>
-                <button class="nav-pill" id="pillStats" onclick="switchAdminTab('stats')">📊 Stats</button>
-                <button class="nav-pill" id="pillStaff" onclick="switchAdminTab('staff')">👥 Staff</button>
-                <button class="nav-pill" id="pillConfig" onclick="switchAdminTab('config')">⚙️ Config</button>
-            </div>
-
-            <!-- Tab 1: Scanner -->
-            <div id="tabScan">
-                <div id="reader" style="border-radius:14px; overflow:hidden; margin-bottom:14px;"></div>
-                <div id="scanResultBox" style="display:none; background:#f4f4f5; padding:15px; border-radius:14px; border:1px solid #e4e4e7;">
-                    <p style="font-size:12px; color:#71717a;">Customer: <b id="resCustName" style="color:#18181b;"></b></p>
-                    <p style="font-size:24px; font-weight:800; color:#ff5500; margin:4px 0;">Stamps: <span id="resStamps">0</span></p>
-                    <div style="display:flex; gap:8px; margin-top:10px;">
-                        <button class="btn btn-orange" id="btnActionAdd" onclick="addCupStamp()">➕ Add Cup</button>
-                        <button class="btn" id="btnActionRedeem" style="background:#dc2626; color:white;" onclick="redeemCupReward()">🎁 Redeem</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 2: Analytics -->
-            <div id="tabStats" style="display:none;">
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-lbl">Customers</div>
-                        <div class="stat-val" id="valTotalCust">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-lbl">Cups Given</div>
-                        <div class="stat-val" id="valTotalCups">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-lbl">Rewards Claimed</div>
-                        <div class="stat-val" id="valTotalRewards">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-lbl">Active Staff</div>
-                        <div class="stat-val" id="valStaffCount">0</div>
-                    </div>
-                </div>
-                <p style="font-size:11px; color:#71717a; text-align:center;">Real-time business performance analytics</p>
-            </div>
-
-            <!-- Tab 3: Staff & Permissions (Owner Only) -->
-            <div id="tabStaff" style="display:none; text-align:left;">
-                <div class="input-group">
-                    <label class="input-label">Staff Name</label>
-                    <input type="text" class="form-input" id="inStaffName" placeholder="Employee Name">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">4-Digit PIN</label>
-                    <input type="password" class="form-input" id="inStaffPin" placeholder="PIN Code (e.g. 2026)">
-                </div>
-                <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px; font-size:12px;">
-                    <label><input type="checkbox" id="chkAdd" checked> Allow Adding Cups</label>
-                    <label><input type="checkbox" id="chkRedeem" checked> Allow Redeeming Free Cup</label>
-                    <label><input type="checkbox" id="chkStats"> Allow Analytics Access</label>
-                </div>
-                <button class="btn btn-orange" onclick="createStaffAccount()">+ Add Staff Account</button>
-                <label class="input-label" style="margin-top:16px;">Active Employees</label>
-                <div id="staffListView" style="max-height:160px; overflow-y:auto;">Loading...</div>
-            </div>
-
-            <!-- Tab 4: Store & Card Customization (Owner Only) -->
-            <div id="tabConfig" style="display:none; text-align:left;">
-                <div class="input-group">
-                    <label class="input-label">Shop / Brand Name</label>
-                    <input type="text" class="form-input" id="cfgBrandName" placeholder="Cup And Go">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Offer Slogan</label>
-                    <input type="text" class="form-input" id="cfgOfferText" placeholder="Collect stamps & get free drinks!">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Cup Icon Style</label>
-                    <select class="form-select" id="cfgIcon">
-                        <option value="☕">☕ Hot Coffee Cup</option>
-                        <option value="🥤">🥤 Cold Drink / Plastic Cup</option>
-                        <option value="🧊">🧊 Ice V60 / Cold Brew</option>
-                        <option value="🧋">🧋 Milk Tea / Bubble Cup</option>
-                        <option value="🍵">🍵 Matcha / Tea</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Total Stamps Count</label>
-                    <select class="form-select" id="cfgSlots">
-                        <option value="5">5 Cups (4 Paid + 1 Free)</option>
-                        <option value="6">6 Cups (5 Paid + 1 Free)</option>
-                        <option value="7">7 Cups (6 Paid + 1 Free)</option>
-                        <option value="8">8 Cups (7 Paid + 1 Free)</option>
-                        <option value="10">10 Cups (9 Paid + 1 Free)</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Pass Card Background</label>
-                    <select class="form-select" id="cfgCardBg">
-                        <option value="#231714">Dark Coffee Bronze</option>
-                        <option value="#181e28">Midnight Navy</option>
-                        <option value="#18181b">Obsidian Matte Black</option>
-                        <option value="#ff5500">Signature Orange</option>
-                    </select>
-                </div>
-                <button class="btn btn-orange" onclick="saveStoreSettings()">Save Changes Live 🚀</button>
-            </div>
-        </div>
-
     </div>
+
+    <!-- Broadcast Modal -->
+    <div class="modal-screen" id="modalBroadcast">
+        <div class="modal-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-weight:800; color:#3b231d;">📢 إرسال رسالة للعملاء</h3>
+                <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+            <input type="text" id="msgTitle" placeholder="عنوان العرض (مثال: Cup And Go - خصم خاص!)">
+            <textarea id="msgBody" rows="3" placeholder="تفاصيل العرض"></textarea>
+            <button class="btn-full btn-brown" onclick="sendBroadcast()">إرسال لجميع العملاء 🚀</button>
+            <button class="btn-full" style="background:#dc2626; color:white; margin-top:8px;" onclick="clearBroadcast()">مسح الرسالة الحالية</button>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -259,73 +147,156 @@
 
     let totalSlots = 8;
     let cupIcon = "☕";
-    let currentRole = "";
-    let activePerms = { canAdd: true, canRedeem: true, canStats: true };
     let scannerObj = null;
-    let scannedPhone = "";
-    let activePhone = localStorage.getItem("cup_cust_phone") || "";
-    let activeName = localStorage.getItem("cup_cust_name") || "";
+    let scannedId = "";
 
-    // 1. Splash Animation (1.5s)
-    window.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => {
-            const splash = document.getElementById("splashScreen");
-            splash.style.opacity = "0";
-            setTimeout(() => { splash.style.display = "none"; initViewFlow(); }, 500);
-        }, 1500);
-    });
-
-    function initViewFlow() {
-        if(activePhone) openCustomerPass(activePhone, activeName);
-        else document.getElementById("viewCustomerLogin").style.display = "block";
+    // 1. Customer UID
+    let customerId = localStorage.getItem("cup_card_uid");
+    let isFirstTime = false;
+    if(!customerId) {
+        customerId = "CUP-" + Math.floor(100000 + Math.random() * 900000);
+        localStorage.setItem("cup_card_uid", customerId);
+        isFirstTime = true;
     }
 
-    // 2. Real-time Store Config Sync
-    db.collection("settings").doc("store_config").onSnapshot((doc) => {
-        if(doc.exists) {
-            const d = doc.data();
-            if(d.brandName) {
-                document.getElementById("splashBrand").innerText = d.brandName;
-                document.getElementById("uiHeaderName").innerText = d.brandName;
-                document.getElementById("passBrandName").innerText = d.brandName;
-                document.getElementById("cfgBrandName").value = d.brandName;
-            }
-            if(d.offerText) {
-                document.getElementById("splashOffer").innerText = d.offerText;
-                document.getElementById("passOfferText").innerText = d.offerText;
-                document.getElementById("cfgOfferText").value = d.offerText;
-            }
-            if(d.cupIcon) {
-                cupIcon = d.cupIcon;
-                document.getElementById("splashLogo").innerText = cupIcon;
-                document.getElementById("uiHeaderIcon").innerText = cupIcon;
-                document.getElementById("cfgIcon").value = cupIcon;
-            }
-            if(d.totalSlots) {
-                totalSlots = parseInt(d.totalSlots);
-                document.getElementById("cfgSlots").value = totalSlots;
-            }
-            if(d.cardBg) {
-                document.getElementById("passCardContainer").style.backgroundColor = d.cardBg;
-                document.getElementById("cfgCardBg").value = d.cardBg;
-            }
-            if(activePhone) renderStamps(cachedStamps);
+    // 2. Render QR
+    const qrBox = document.getElementById("qrcode");
+    new QRCode(qrBox, { text: customerId, width: 125, height: 125 });
+
+    // 3. Show Arabic Welcome on First Scan
+    window.addEventListener("DOMContentLoaded", () => {
+        if(isFirstTime) {
+            document.getElementById("arModalSub").innerText = "أهلاً بك في Cup And Go! تم تفعيل بطاقتك بنجاح. اجمع الأكواب واحصل على مشروبك المجاني! 🎁";
+            document.getElementById("arabicModalBanner").style.display = "flex";
         }
     });
 
-    // 3. Customer Pass Flow
-    let cachedStamps = 0;
-    let custUnsub = null;
+    function closeArBanner() {
+        document.getElementById("arabicModalBanner").style.display = "none";
+    }
 
-    function handleCustLogin() {
-        const name = document.getElementById("inCustName").value.trim();
-        const phone = document.getElementById("inCustPhone").value.trim();
-        if(!name || !phone) return alert("Please enter Name and Mobile Number");
+    // 4. Live Sync Stamps
+    let lastStampsCount = null;
+    db.collection("loyalty").doc(customerId).onSnapshot((doc) => {
+        let stamps = 0;
+        if(doc.exists) {
+            stamps = doc.data().stamps || 0;
+            if(lastStampsCount !== null && stamps > lastStampsCount) {
+                document.getElementById("arModalSub").innerText = `مبروك! تمت إضافة كوب في Cup And Go ☕\nأصبح لديك الآن ${stamps} أكواب.`;
+                document.getElementById("arabicModalBanner").style.display = "flex";
+            }
+        } else {
+            db.collection("loyalty").doc(customerId).set({ stamps: 0, createdAt: new Date() });
+        }
+        lastStampsCount = stamps;
+        document.getElementById("lblCollectedCount").innerText = stamps;
+        renderStamps(stamps);
+    });
 
-        localStorage.setItem("cup_cust_phone", phone);
-        localStorage.setItem("cup_cust_name", name);
-        activePhone = phone; activeName = name;
+    function renderStamps(stamps) {
+        const grid = document.getElementById("stampsContainer");
+        grid.innerHTML = "";
+        for(let i = 1; i <= totalSlots; i++) {
+            const slot = document.createElement("div");
+            const isTaken = i <= stamps;
+            slot.className = "stamp-slot" + (isTaken ? " active" : "");
+            slot.innerHTML = isTaken ? cupIcon : (i === totalSlots ? "🎁" : i);
+            grid.appendChild(slot);
+        }
+    }
 
-        db.collection("loyalty").doc(phone).get().then((doc) => {
-            if(!doc.exists) {
-                db.collection("loyalty").doc(phone).set({ name: name, phone: phone, sta
+    // 5. Broadcast Sync
+    db.collection("settings").doc("broadcast_message").onSnapshot((doc) => {
+        if(doc.exists && doc.data().active) {
+            const d = doc.data();
+            document.getElementById("notifTitle").innerText = "Cup And Go - " + (d.title || "عرض المتجر");
+            document.getElementById("notifBody").innerText = d.body || "";
+            document.getElementById("liveNotifBanner").style.display = "flex";
+        } else {
+            document.getElementById("liveNotifBanner").style.display = "none";
+        }
+    });
+
+    // 6. Cashier Functions
+    function openStaffLogin() {
+        const pin = prompt("أدخل الرقم السري للكاشير / المالك:");
+        if(pin !== "1234") return alert("الرمز غير صحيح!");
+        document.getElementById("modalScanner").style.display = "flex";
+        startScanner();
+    }
+
+    function startScanner() {
+        if(!scannerObj) {
+            scannerObj = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
+            scannerObj.render((text) => {
+                scannedId = text.trim();
+                db.collection("loyalty").doc(scannedId).get().then((doc) => {
+                    if(doc.exists) {
+                        const d = doc.data();
+                        document.getElementById("scanResultBox").style.display = "block";
+                        document.getElementById("resCustId").innerText = scannedId;
+                        document.getElementById("resStamps").innerText = d.stamps || 0;
+                    } else {
+                        alert("رمز البطاقة غير مسجل");
+                    }
+                });
+            });
+        }
+    }
+
+    function addCupToCustomer() {
+        if(!scannedId) return;
+        const ref = db.collection("loyalty").doc(scannedId);
+        db.runTransaction((t) => {
+            return t.get(ref).then((doc) => {
+                let s = (doc.exists && doc.data().stamps) ? doc.data().stamps : 0;
+                let next = s + 1;
+                t.update(ref, { stamps: next });
+                return next;
+            });
+        }).then((newStamps) => {
+            document.getElementById("resStamps").innerText = newStamps;
+            alert(`تمت إضافة كوب في Cup And Go! الإجمالي: ${newStamps}`);
+        });
+    }
+
+    function redeemReward() {
+        if(!scannedId) return;
+        if(confirm("استبدال المكافأة وإعادة ضبط البطاقة؟")) {
+            db.collection("loyalty").doc(scannedId).update({ stamps: 0 }).then(() => {
+                document.getElementById("resStamps").innerText = 0;
+                alert("تم استبدال الهدية بنجاح في Cup And Go!");
+            });
+        }
+    }
+
+    function openBroadcastModal() {
+        document.getElementById("modalScanner").style.display = "none";
+        document.getElementById("modalBroadcast").style.display = "flex";
+    }
+
+    function sendBroadcast() {
+        const title = document.getElementById("msgTitle").value.trim();
+        const body = document.getElementById("msgBody").value.trim();
+        if(!title || !body) return alert("يرجى تعبئة العنوان والرسالة");
+
+        db.collection("settings").doc("broadcast_message").set({ title: title, body: body, active: true }).then(() => {
+            alert("تم إرسال العرض لجميع عملاء Cup And Go!");
+            closeModals();
+        });
+    }
+
+    function clearBroadcast() {
+        db.collection("settings").doc("broadcast_message").set({ active: false }).then(() => {
+            alert("تم مسح الرسالة!");
+            closeModals();
+        });
+    }
+
+    function closeModals() {
+        document.querySelectorAll(".modal-screen").forEach(m => m.style.display = "none");
+        if(scannerObj) { scannerObj.clear(); scannerObj = null; }
+    }
+</script>
+</body>
+</html>
