@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cup And Go - Digital Loyalty</title>
+    <title>Cup And Go - Loyalty</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -14,8 +14,8 @@
         body { background: #121212; color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
         .app-wrapper { width: 100%; max-width: 380px; }
         
-        /* Digital Pass Card */
-        .pass-card { background: #3b231d; border-radius: 24px; padding: 25px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        /* Customer Digital Card */
+        .pass-card { background: #3b231d; border-radius: 24px; padding: 25px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; border: 1px solid rgba(255,255,255,0.1); transition: background 0.3s; }
         .brand-name { font-size: 24px; font-weight: 800; color: #fff; }
         .brand-sub { font-size: 13px; color: #d7ccc8; margin-top: 4px; }
         
@@ -25,8 +25,11 @@
 
         .qr-box { background: white; padding: 12px; border-radius: 16px; display: inline-block; margin-bottom: 12px; }
         
-        /* Admin Scanner UI */
+        /* Admin Panels */
         .admin-panel { background: #222; border-radius: 24px; padding: 20px; text-align: center; display: none; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #444; background: #333; color: white; border-radius: 10px; font-size: 14px; margin-bottom: 10px; outline: none; }
+        label { display: block; text-align: left; font-size: 12px; color: #bbb; margin-bottom: 4px; font-weight: 600; }
+        
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px; }
         .btn-orange { background: #ff6b00; color: white; }
         .btn-gray { background: rgba(255,255,255,0.1); color: #aaa; font-size: 12px; }
@@ -35,10 +38,10 @@
 <body>
 
 <div class="app-wrapper">
-    <!-- Customer Digital Card -->
+    <!-- 1. Customer Card Screen -->
     <div class="pass-card" id="customerCard">
-        <div class="brand-name">Cup And Go</div>
-        <div class="brand-sub">Collect 7 cups & get 1 free drink! 🎁</div>
+        <div class="brand-name" id="uiBrandName">Cup And Go</div>
+        <div class="brand-sub" id="uiOfferText">Collect stamps & get free drinks! 🎁</div>
 
         <div class="stamps-grid" id="stampsContainer"></div>
 
@@ -46,23 +49,58 @@
             <div id="qrcode"></div>
         </div>
         
-        <p style="font-size: 12px; color: #a89f91; margin-bottom: 15px;">Show this QR code at the counter on your next visit</p>
-        <button class="btn btn-gray" onclick="toggleAdmin()">⚙️ Cashier Mode</button>
+        <p style="font-size: 12px; color: #a89f91; margin-bottom: 15px;">Show this QR code at the counter</p>
+        <button class="btn btn-gray" onclick="toggleAdmin()">⚙️ Cashier & Settings Mode</button>
     </div>
 
-    <!-- Cashier Scanner Screen -->
+    <!-- 2. Admin Hub (Scanner & Live Customizer) -->
     <div class="admin-panel" id="adminScreen">
-        <h3 style="margin-bottom: 15px; color: #ff6b00;">📱 Cashier Scanner</h3>
-        <div id="reader" style="border-radius: 14px; overflow: hidden; margin-bottom: 15px;"></div>
-        
-        <div id="scanResult" style="display: none; background: #333; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-            <p style="font-size: 13px; color: #bbb;">Customer ID: <b id="lblCustId" style="color:white;"></b></p>
-            <p style="font-size: 20px; font-weight: 800; color: #ff6b00; margin: 8px 0;">Stamps: <span id="lblStamps">0</span> / 7</p>
-            <button class="btn btn-orange" onclick="addStampToCustomer()">➕ Add +1 Stamp ☕</button>
-            <button class="btn" style="background:#dc2626; color:white;" onclick="resetCustomerStamps()">🎁 Redeem Free Cup (Reset)</button>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <button class="btn btn-orange" style="margin:0; padding:8px 15px; font-size:13px; width:48%;" onclick="showTab('scan')">📷 QR Scanner</button>
+            <button class="btn btn-gray" style="margin:0; padding:8px 15px; font-size:13px; width:48%;" onclick="showTab('settings')">🎨 Settings</button>
         </div>
 
-        <button class="btn btn-gray" onclick="toggleAdmin()">Back to My Card</button>
+        <!-- Tab 1: Scanner -->
+        <div id="tabScan">
+            <div id="reader" style="border-radius: 14px; overflow: hidden; margin-bottom: 15px;"></div>
+            
+            <div id="scanResult" style="display: none; background: #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align:left;">
+                <p style="font-size: 13px; color: #bbb;">Customer ID: <b id="lblCustId" style="color:white;"></b></p>
+                <p style="font-size: 20px; font-weight: 800; color: #ff6b00; margin: 8px 0;">Stamps: <span id="lblStamps">0</span></p>
+                <button class="btn btn-orange" onclick="addStampToCustomer()">➕ Add +1 Stamp ☕</button>
+                <button class="btn" style="background:#dc2626; color:white;" onclick="resetCustomerStamps()">🎁 Redeem Free Cup (Reset)</button>
+            </div>
+        </div>
+
+        <!-- Tab 2: Customization Settings -->
+        <div id="tabSettings" style="display:none; text-align:left;">
+            <label>Brand / Shop Name</label>
+            <input type="text" id="cfgBrand" placeholder="e.g. Cup And Go">
+
+            <label>Offer Text</label>
+            <input type="text" id="cfgOffer" placeholder="e.g. Collect 7 cups & get 1 free!">
+
+            <label>Total Stamps (কত কাপে অফার)</label>
+            <select id="cfgSlots">
+                <option value="5">5 Stamps (4 Cups + 1 Free)</option>
+                <option value="6">6 Stamps (5 Cups + 1 Free)</option>
+                <option value="7">7 Stamps (6 Cups + 1 Free)</option>
+                <option value="8">8 Stamps (7 Cups + 1 Free)</option>
+                <option value="10">10 Stamps (9 Cups + 1 Free)</option>
+            </select>
+
+            <label>Card Color</label>
+            <select id="cfgBg">
+                <option value="#3b231d">Dark Coffee</option>
+                <option value="#1e293b">Slate Dark Blue</option>
+                <option value="#0f172a">Pitch Black</option>
+                <option value="#ff6b00">Vibrant Orange</option>
+            </select>
+
+            <button class="btn btn-orange" onclick="saveCustomSettings()">Save & Update Live</button>
+        </div>
+
+        <button class="btn btn-gray" onclick="toggleAdmin()">Back to Customer Pass</button>
     </div>
 </div>
 
@@ -78,7 +116,35 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 1. Get or Create Unique Customer ID
+    let totalSlots = 8;
+    let cardBg = "#3b231d";
+
+    // 1. Live Configuration Sync
+    db.collection("settings").doc("card_config").onSnapshot((doc) => {
+        if(doc.exists) {
+            const data = doc.data();
+            if(data.brandName) {
+                document.getElementById("uiBrandName").innerText = data.brandName;
+                document.getElementById("cfgBrand").value = data.brandName;
+            }
+            if(data.offerText) {
+                document.getElementById("uiOfferText").innerText = data.offerText;
+                document.getElementById("cfgOffer").value = data.offerText;
+            }
+            if(data.totalSlots) {
+                totalSlots = parseInt(data.totalSlots);
+                document.getElementById("cfgSlots").value = data.totalSlots;
+            }
+            if(data.cardBg) {
+                cardBg = data.cardBg;
+                document.getElementById("customerCard").style.backgroundColor = cardBg;
+                document.getElementById("cfgBg").value = cardBg;
+            }
+            renderCustomerStamps();
+        }
+    });
+
+    // 2. Customer ID & Storage
     let myCustomerId = localStorage.getItem("cup_customer_id");
     if(!myCustomerId) {
         myCustomerId = "CUP-" + Math.floor(100000 + Math.random() * 900000);
@@ -86,23 +152,26 @@
         db.collection("loyalty").doc(myCustomerId).set({ stamps: 0, visits: 1, createdAt: new Date() });
     }
 
-    // Generate Customer QR Pass
     new QRCode(document.getElementById("qrcode"), { text: myCustomerId, width: 130, height: 130 });
 
-    // Live update stamps for customer
+    let myStamps = 0;
     db.collection("loyalty").doc(myCustomerId).onSnapshot((doc) => {
-        const count = (doc.exists && doc.data().stamps) ? doc.data().stamps : 0;
-        const grid = document.getElementById("stampsContainer");
-        grid.innerHTML = "";
-        for(let i = 1; i <= 8; i++) {
-            const slot = document.createElement("div");
-            slot.className = "slot" + (i <= count ? " active" : "");
-            slot.innerHTML = (i <= count) ? "☕" : (i === 8 ? "🎁" : i);
-            grid.appendChild(slot);
-        }
+        myStamps = (doc.exists && doc.data().stamps) ? doc.data().stamps : 0;
+        renderCustomerStamps();
     });
 
-    // 2. Admin & Scanner Logic
+    function renderCustomerStamps() {
+        const grid = document.getElementById("stampsContainer");
+        grid.innerHTML = "";
+        for(let i = 1; i <= totalSlots; i++) {
+            const slot = document.createElement("div");
+            slot.className = "slot" + (i <= myStamps ? " active" : "");
+            slot.innerHTML = (i <= myStamps) ? "☕" : (i === totalSlots ? "🎁" : i);
+            grid.appendChild(slot);
+        }
+    }
+
+    // 3. Admin & Navigation
     let scannedId = "";
     let scannerObj = null;
 
@@ -115,7 +184,7 @@
             if(pin === "1234") {
                 custCard.style.display = "none";
                 adminCard.style.display = "block";
-                startScanner();
+                showTab('scan');
             } else {
                 alert("Incorrect PIN!");
             }
@@ -126,11 +195,18 @@
         }
     }
 
+    function showTab(tab) {
+        document.getElementById("tabScan").style.display = tab === 'scan' ? 'block' : 'none';
+        document.getElementById("tabSettings").style.display = tab === 'settings' ? 'block' : 'none';
+        if(tab === 'scan') startScanner();
+        else if(scannerObj) scannerObj.clear();
+    }
+
     function startScanner() {
         if(!scannerObj) {
             scannerObj = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
-            scannerObj.render((scannedText) => {
-                scannedId = scannedText.trim();
+            scannerObj.render((text) => {
+                scannedId = text.trim();
                 fetchScannedData(scannedId);
             });
         }
@@ -143,7 +219,7 @@
                 document.getElementById("lblCustId").innerText = id;
                 document.getElementById("lblStamps").innerText = doc.data().stamps || 0;
             } else {
-                alert("Invalid or Unregistered Customer QR");
+                alert("Unregistered Customer QR");
             }
         });
     }
@@ -172,6 +248,23 @@
                 alert("Reward Claimed! Pass reset to 0.");
             });
         }
+    }
+
+    function saveCustomSettings() {
+        const b = document.getElementById("cfgBrand").value.trim() || "Cup And Go";
+        const o = document.getElementById("cfgOffer").value.trim() || "Collect stamps & get free drinks!";
+        const s = document.getElementById("cfgSlots").value;
+        const bg = document.getElementById("cfgBg").value;
+
+        db.collection("settings").doc("card_config").set({
+            brandName: b,
+            offerText: o,
+            totalSlots: s,
+            cardBg: bg
+        }).then(() => {
+            alert("Settings updated! All cards synced live.");
+            showTab('scan');
+        });
     }
 </script>
 </body>
