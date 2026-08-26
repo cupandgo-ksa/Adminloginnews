@@ -3,95 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cup And Go - Cashier Scanner</title>
+    <title>Admin Dashboard & Settings</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; margin: 0; padding: 15px; text-align: center; }
-        .box { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 400px; margin: auto; }
-        h2 { color: #333; margin-top: 0; }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 15px; }
-        .btn { background: #ff7a00; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
-        .btn-claim { background: #28a745; }
-        .info { background: #fff8f0; border: 1px solid #ffe0b2; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: left; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; }
+        body { background: #f8f9fc; color: #1e293b; padding-bottom: 90px; }
+        .top-header { background: linear-gradient(135deg, #ff6b00, #ff8800); color: white; padding: 25px 20px; border-radius: 0 0 25px 25px; }
+        .main-content { padding: 15px; }
+        .card-box { background: white; border-radius: 18px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 15px; }
+        .section-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+        input, select { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; margin-bottom: 10px; outline: none; }
+        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .btn-orange { background: #ff6b00; color: white; }
+        .btn-gray { background: #f1f5f9; color: #475569; margin-top: 8px; }
+        .customer-card { background: #f8fafc; border-radius: 14px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        #scannerModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; padding: 20px; align-items: center; justify-content: center; }
+        .modal-box { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 380px; text-align: center; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; align-items: center; height: 65px; border-top: 1px solid #e2e8f0; }
+        .nav-btn { background: none; border: none; font-size: 11px; font-weight: 600; color: #64748b; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+        .nav-btn.active { color: #ff6b00; }
+        .scan-float { background: linear-gradient(135deg, #ff6b00, #ff8800); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; border: 3px solid white; box-shadow: 0 4px 12px rgba(255,107,0,0.4); margin-top: -25px; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h2>Cup And Go Admin</h2>
-    <div id="reader"></div>
-
-    <div id="customer-view" class="info" style="display:none;">
-        <p><strong>Customer:</strong> <span id="disp-id"></span></p>
-        <p><strong>Total Stamps:</strong> <span id="disp-stamps" style="font-size: 24px; color: #ff7a00; font-weight: bold;"></span> / 5</p>
-        <button class="btn" onclick="addStamp()">+1 Add Stamp</button>
-        <button class="btn btn-claim" id="claim-btn" style="display:none;" onclick="claimReward()">🎁 Redeem Free Drink</button>
+    <div class="top-header">
+        <div style="font-size: 13px; opacity: 0.9;">Store Administration</div>
+        <div style="font-size: 22px; font-weight: 800;" id="hdrBrand">Cup And Go</div>
     </div>
-</div>
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDI8tfzkWABqaAB9e0KGPj0",
-        authDomain: "cup-and-go-53e2d.firebaseapp.com",
-        projectId: "cup-and-go-53e2d",
-        storageBucket: "cup-and-go-53e2d.firebasestorage.app",
-        messagingSenderId: "555868986103",
-        appId: "1:555868986103:web:3a89b804a7",
-        measurementId: "G-YKV4SQDD4C"
-    };
+    <div class="main-content">
+        <!-- Settings Panel -->
+        <div class="card-box">
+            <div class="section-title">🎨 Card Customization (লাইভ পরিবর্তন করুন)</div>
+            <label style="font-size:12px; font-weight:600;">Brand / Store Name</label>
+            <input type="text" id="cfgBrand" placeholder="e.g. Cup And Go">
+            
+            <label style="font-size:12px; font-weight:600;">Offer Description</label>
+            <input type="text" id="cfgOffer" placeholder="e.g. Collect 7 cups & get 1 free drink!">
+            
+            <label style="font-size:12px; font-weight:600;">Total Stamps Slots (কত স্ট্যাম্পে অফার)</label>
+            <select id="cfgSlots">
+                <option value="5">5 Stamps (4 cups + 1 Free)</option>
+                <option value="6">6 Stamps (5 cups + 1 Free)</option>
+                <option value="7">7 Stamps (6 cups + 1 Free)</option>
+                <option value="8">8 Stamps (7 cups + 1 Free)</option>
+                <option value="10">10 Stamps (9 cups + 1 Free)</option>
+            </select>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+            <label style="font-size:12px; font-weight:600;">Card Background Color</label>
+            <select id="cfgBg">
+                <option value="#3b231d">Dark Coffee (#3b231d)</option>
+                <option value="#1e293b">Dark Slate Blue (#1e293b)</option>
+                <option value="#0f172a">Deep Black (#0f172a)</option>
+                <option value="#ff6b00">Vibrant Orange (#ff6b00)</option>
+            </select>
 
-    let activeCustomer = "";
-    let totalStamps = 0;
+            <button class="btn-action btn-orange" onclick="saveSettings()">Save & Update All Cards</button>
+        </div>
 
-    function onScanSuccess(decodedText) {
-        activeCustomer = decodedText;
-        loadCustomer(decodedText);
-    }
+        <!-- Customer List -->
+        <div class="card-box">
+            <div class="section-title">👥 Registered Customers</div>
+            <div id="customerList">Loading customers...</div>
+        </div>
+    </div>
 
-    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-    scanner.render(onScanSuccess);
+    <!-- Scanner Modal -->
+    <div id="scannerModal">
+        <div class="modal-box">
+            <h3 style="margin-bottom:10px;">Scan Customer QR</h3>
+            <div id="reader" style="border-radius:12px; overflow:hidden;"></div>
+            
+            <div id="scanResult" style="display:none; margin-top:15px; text-align:left; background:#f8fafc; padding:12px; border-radius:12px;">
+                <div id="scannedName" style="font-weight:700; font-size:15px;"></div>
+                <div id="scannedPhone" style="font-size:12px; color:#64748b;"></div>
+                <div style="margin:10px 0; font-size:14px;">Stamps: <b id="scannedStamps" style="color:#ff6b00; font-size:18px;"></b></div>
+                <button class="btn-action btn-orange" onclick="addStamp()">+1 Add Stamp ☕</button>
+                <button class="btn-action btn-gray" style="background:#fee2e2; color:#dc2626;" onclick="redeemReward()">🎁 Redeem Reward (Reset)</button>
+            </div>
+            
+            <button class="btn-action btn-gray" onclick="closeScanner()">Close</button>
+        </div>
+    </div>
 
-    function loadCustomer(id) {
-        db.collection("loyalty").doc(id).get().then((doc) => {
-            if (doc.exists) {
-                totalStamps = doc.data().stamps || 0;
-            } else {
-                totalStamps = 0;
-                db.collection("loyalty").doc(id).set({ stamps: 0, joined: new Date() });
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+        <button class="nav-btn active"><span>⚙️</span>Admin</button>
+        <button class="scan-float" onclick="openScanner()">📷</button>
+        <button class="nav-btn" onclick="openScanner()"><span>🔍</span>Scan</button>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDI8tfzkWABqaAB9e0KGPj0",
+            authDomain: "cup-and-go-53e2d.firebaseapp.com",
+            projectId: "cup-and-go-53e2d",
+            storageBucket: "cup-and-go-53e2d.firebasestorage.app",
+            messagingSenderId: "555868986103",
+            appId: "1:555868986103:web:3a89b804a7"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let activePhone = "";
+        let qrScanner = null;
+
+        // Fetch Settings
+        db.collection("settings").doc("card_config").get().then((doc) => {
+            if(doc.exists) {
+                const d = doc.data();
+                if(d.brandName) {
+                    document.getElementById("cfgBrand").value = d.brandName;
+                    document.getElementById("hdrBrand").innerText = d.brandName;
+                }
+                if(d.offerText) document.getElementById("cfgOffer").value = d.offerText;
+                if(d.totalSlots) document.getElementById("cfgSlots").value = d.totalSlots;
+                if(d.cardBg) document.getElementById("cfgBg").value = d.cardBg;
             }
-            renderUI();
         });
-    }
 
-    function renderUI() {
-        document.getElementById("customer-view").style.display = "block";
-        document.getElementById("disp-id").innerText = activeCustomer;
-        document.getElementById("disp-stamps").innerText = totalStamps;
-        document.getElementById("claim-btn").style.display = totalStamps >= 5 ? "block" : "none";
-    }
+        function saveSettings() {
+            const b = document.getElementById("cfgBrand").value.trim() || "Cup And Go";
+            const o = document.getElementById("cfgOffer").value.trim() || "Collect stamps and get rewards!";
+            const s = document.getElementById("cfgSlots").value;
+            const bg = document.getElementById("cfgBg").value;
 
-    function addStamp() {
-        totalStamps++;
-        db.collection("loyalty").doc(activeCustomer).update({ stamps: totalStamps }).then(() => {
-            alert("1 Stamp added successfully!");
-            renderUI();
-        });
-    }
-
-    function claimReward() {
-        if (confirm("Redeem free reward for this customer?")) {
-            totalStamps = 0;
-            db.collection("loyalty").doc(activeCustomer).update({ stamps: 0 }).then(() => {
-                alert("Reward redeemed! Stamps reset to 0.");
-                renderUI();
+            db.collection("settings").doc("card_config").set({
+                brandName: b,
+                offerText: o,
+                totalSlots: s,
+                cardBg: bg,
+                themeColor: "#ff6b00"
+            }).then(() => {
+                document.getElementById("hdrBrand").innerText = b;
+                alert("Settings Updated! All customer cards have been updated live.");
             });
         }
-    }
-</script>
+
+        // Live Customers
+        db.collection("loyalty").onSnapshot((snapshot) => {
+            let listHtml = "";
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                listHtml += `
+                    <div class="customer-card">
+                        <div>
+                            <div style="font-weight:700;">${data.name || "Customer"}</div>
+                            <div style="font-size:12px; color:#64748b;">${data.phone} • ${data.totalVisits || 0} visits</div>
+                        </div>
+                        <div style="font-weight:800; color:#ff6b00; font-size:16px;">${data.stamps || 0} stamps</div>
+                    </div>
+                `;
+            });
+            document.getElementById("customerList").innerHTML = listHtml || "No customers yet.";
+        });
+
+        function openScanner() {
+            document.getElementById("scannerModal").style.display = "flex";
+            document.getElementById("scanResult").style.display = "none";
+            if(!qrScanner) {
+                qrScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
+                qrScanner.render((phone) => {
+                    activePhone = phone.trim();
+                    fetchScannedCustomer(activePhone);
+                });
+            }
+        }
+
+        function closeScanner() {
+            document.getElementById("scannerModal").style.display = "none";
+        }
+
+        function fetchScannedCustomer(phone) {
+            db.collection("loyalty").doc(phone).get().then((doc) => {
+                if(doc.exists) {
+                    const data = doc.data();
+                    document.getElementById("scanResult").style.display = "block";
+                    document.getElementById("scannedName").innerText = data.name || "Customer";
+                    document.getElementById("scannedPhone").innerText = phone;
+                    document.getElementById("scannedStamps").innerText = data.stamps || 0;
+                }
+            });
+        }
+
+        function addStamp() {
+            if(!activePhone) return;
+            const ref = db.collection("loyalty").doc(activePhone);
+            db.runTransaction((t) => {
+                return t.get(ref).then((doc) => {
+                    let s = (doc.data().stamps || 0) + 1;
+                    let v = (doc.data().totalVisits || 0) + 1;
+                    t.update(ref, { stamps: s, totalVisits: v });
+                    return s;
+                });
+            }).then((newS) => {
+                document.getElementById("scannedStamps").innerText = newS;
+                alert("Stamp added! ☕");
+            });
+        }
+
+        function redeemReward() {
+            if(!activePhone) return;
+            if(confirm("Reset stamps to 0?")) {
+                db.collection("loyalty").doc(activePhone).update({ stamps: 0 }).then(() => {
+                    document.getElementById("scannedStamps").innerText = 0;
+                    alert("Reward Redeemed!");
+                });
+            }
+        }
+    </script>
 </body>
 </html>
