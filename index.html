@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cup And Go - Loyalty Pass</title>
+    <title>Loyalty Pass</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -12,20 +12,14 @@
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: #f3f4f6; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 90vh; }
         .container { width: 100%; max-width: 380px; }
-        
         .login-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-        .login-card h2 { color: #1f2937; margin-top: 0; }
         input { width: 100%; padding: 14px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 16px; text-align: center; margin-bottom: 12px; outline: none; }
-        input:focus { border-color: #ff6b00; }
-        
-        .pass-card { background: #3b231d; color: white; border-radius: 24px; padding: 25px; box-shadow: 0 15px 35px rgba(59,35,29,0.3); text-align: center; }
+        .pass-card { background: #3b231d; color: white; border-radius: 24px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; transition: background 0.3s; }
         .brand-title { font-size: 22px; font-weight: 800; margin: 0; }
         .brand-sub { font-size: 13px; color: #d7ccc8; margin-top: 4px; }
-        
         .stamps-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
-        .stamp-slot { aspect-ratio: 1; background: rgba(255,255,255,0.08); border: 1.5px dashed rgba(255,255,255,0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #d7ccc8; font-weight: 700; }
-        .stamp-slot.filled { background: #ff6b00; border: none; color: white; box-shadow: 0 4px 12px rgba(255,107,0,0.4); }
-        
+        .stamp-slot { aspect-ratio: 1; background: rgba(255,255,255,0.1); border: 1.5px dashed rgba(255,255,255,0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #d7ccc8; font-weight: 700; }
+        .stamp-slot.filled { background: #ff6b00; border: none; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         .qr-wrapper { background: white; padding: 12px; border-radius: 16px; display: inline-block; margin: 5px 0 10px; }
         .btn { width: 100%; padding: 14px; background: #ff6b00; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
     </style>
@@ -34,31 +28,22 @@
 
 <div class="container">
     <div class="login-card" id="loginScreen">
-        <h2>☕ Cup And Go</h2>
+        <h2 id="loginBrandTitle">☕ Cup And Go</h2>
         <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">Enter your name & phone number</p>
         <input type="text" id="userName" placeholder="Your Name">
         <input type="tel" id="userPhone" placeholder="05XXXXXXXX">
-        <button class="btn" onclick="registerUser()">Open My Card</button>
+        <button class="btn" id="loginBtn" onclick="registerUser()">Open My Card</button>
     </div>
 
     <div class="pass-card" id="passScreen" style="display: none;">
-        <div class="brand-title">Cup And Go</div>
-        <div class="brand-sub">Collect 7 cups and get 1 free drink!</div>
+        <div class="brand-title" id="cardBrandTitle">Cup And Go</div>
+        <div class="brand-sub" id="cardOfferText">Collect stamps and get rewards!</div>
 
         <div style="margin: 15px 0 5px; text-align: left; font-size: 14px;">
-            Hello, <span id="displayName" style="color: #ff6b00; font-weight: bold;"></span>
+            Hello, <span id="displayName" style="font-weight: bold;"></span>
         </div>
 
-        <div class="stamps-container">
-            <div class="stamp-slot" id="s1">1</div>
-            <div class="stamp-slot" id="s2">2</div>
-            <div class="stamp-slot" id="s3">3</div>
-            <div class="stamp-slot" id="s4">4</div>
-            <div class="stamp-slot" id="s5">5</div>
-            <div class="stamp-slot" id="s6">6</div>
-            <div class="stamp-slot" id="s7">7</div>
-            <div class="stamp-slot" id="s8">🎁</div>
-        </div>
+        <div class="stamps-container" id="stampsGrid"></div>
 
         <div class="qr-wrapper">
             <div id="qrcode"></div>
@@ -80,6 +65,32 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+    let totalSlots = 8;
+    let themeColor = "#ff6b00";
+    let cardBg = "#3b231d";
+
+    // Auto load custom settings from admin
+    db.collection("settings").doc("card_config").onSnapshot((doc) => {
+        if(doc.exists) {
+            const data = doc.data();
+            if(data.brandName) {
+                document.getElementById("loginBrandTitle").innerText = "☕ " + data.brandName;
+                document.getElementById("cardBrandTitle").innerText = data.brandName;
+            }
+            if(data.offerText) document.getElementById("cardOfferText").innerText = data.offerText;
+            if(data.cardBg) {
+                cardBg = data.cardBg;
+                document.getElementById("passScreen").style.backgroundColor = cardBg;
+            }
+            if(data.themeColor) {
+                themeColor = data.themeColor;
+                document.getElementById("loginBtn").style.backgroundColor = themeColor;
+                document.getElementById("displayName").style.color = themeColor;
+            }
+            if(data.totalSlots) totalSlots = parseInt(data.totalSlots);
+        }
+    });
 
     function registerUser() {
         const name = document.getElementById("userName").value.trim();
@@ -112,15 +123,19 @@
                 document.getElementById("displayName").innerText = data.name || defaultName;
                 const stamps = data.stamps || 0;
 
-                for(let i=1; i<=8; i++) {
-                    const slot = document.getElementById("s" + i);
+                const grid = document.getElementById("stampsGrid");
+                grid.innerHTML = "";
+                for(let i=1; i<=totalSlots; i++) {
+                    const slot = document.createElement("div");
+                    slot.className = "stamp-slot";
                     if(i <= stamps) {
                         slot.classList.add("filled");
+                        slot.style.backgroundColor = themeColor;
                         slot.innerHTML = "☕";
                     } else {
-                        slot.classList.remove("filled");
-                        slot.innerHTML = i === 8 ? "🎁" : i;
+                        slot.innerHTML = (i === totalSlots) ? "🎁" : i;
                     }
+                    grid.appendChild(slot);
                 }
             }
         });
