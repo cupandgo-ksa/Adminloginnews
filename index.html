@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cup And Go - Loyalty Card</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #eef2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .card { background: linear-gradient(135deg, #ff7a00, #ff5100); color: white; width: 100%; max-width: 350px; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(255,122,0,0.3); text-align: center; }
+        .stamps { display: flex; justify-content: space-between; margin: 25px 0; }
+        .slot { width: 48px; height: 48px; background: rgba(255,255,255,0.2); border: 2px dashed white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .filled { background: white; color: #ff5100; border: none; font-weight: bold; font-size: 22px; }
+        .qr-box { background: white; padding: 12px; border-radius: 14px; display: inline-block; margin-top: 10px; }
+        input { padding: 12px; border-radius: 10px; border: 1px solid #ccc; width: 85%; font-size: 16px; margin-bottom: 12px; }
+        .btn { background: #222; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen" style="background: white; padding: 25px; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 100%; max-width: 320px;">
+    <h3 style="margin-top:0;">Cup And Go</h3>
+    <p style="color: #666; font-size: 14px;">Enter your mobile number to view your card</p>
+    <input type="tel" id="user-input" placeholder="05XXXXXXXX">
+    <br>
+    <button class="btn" onclick="openPass()">View Card</button>
+</div>
+
+<div id="pass-screen" class="card" style="display: none;">
+    <h2 style="margin: 0;">Cup And Go</h2>
+    <p style="opacity: 0.9; font-size: 14px; margin-top: 4px;">Get 1 free drink for every 5 stamps!</p>
+    
+    <div class="stamps">
+        <div class="slot" id="st1">1</div>
+        <div class="slot" id="st2">2</div>
+        <div class="slot" id="st3">3</div>
+        <div class="slot" id="st4">4</div>
+        <div class="slot" id="st5">🎁</div>
+    </div>
+
+    <div class="qr-box">
+        <div id="qrcode"></div>
+    </div>
+    <p style="font-size: 13px; margin-top: 12px;">Show this QR code at the counter</p>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDI8tfzkWABqaAB9e0KGPj0",
+        authDomain: "cup-and-go-53e2d.firebaseapp.com",
+        projectId: "cup-and-go-53e2d",
+        storageBucket: "cup-and-go-53e2d.firebasestorage.app",
+        messagingSenderId: "555868986103",
+        appId: "1:555868986103:web:3a89b804a7",
+        measurementId: "G-YKV4SQDD4C"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function openPass() {
+        const phone = document.getElementById("user-input").value.trim();
+        if (!phone) return alert("Please enter your phone number");
+
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("pass-screen").style.display = "block";
+
+        new QRCode(document.getElementById("qrcode"), { text: phone, width: 140, height: 140 });
+
+        db.collection("loyalty").doc(phone).onSnapshot((doc) => {
+            const count = doc.exists ? (doc.data().stamps || 0) : 0;
+            for (let i = 1; i <= 5; i++) {
+                const el = document.getElementById("st" + i);
+                if (i <= count) {
+                    el.classList.add("filled");
+                    el.innerHTML = "☕";
+                } else {
+                    el.classList.remove("filled");
+                    el.innerHTML = i === 5 ? "🎁" : i;
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
