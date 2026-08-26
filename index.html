@@ -3,324 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cup And Go - بطاقة الولاء</title>
+    <title>Cup And Go - Loyalty Management</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #f97316;
+            --primary-dark: #ea580c;
+            --coffee: #3b231d;
+            --coffee-light: #52342c;
+            --bg-light: #f8fafc;
+            --card-border: #f1f5f9;
+        }
         * { box-sizing: border-box; font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background: #ffffff; color: #1e1e24; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
-        .app-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; }
+        body { background: #0f172a; color: #1e293b; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .app-wrapper { width: 100%; max-width: 420px; background: #ffffff; min-height: 100vh; display: flex; flex-direction: column; position: relative; overflow-x: hidden; }
 
-        /* Arabic Popup Welcome */
-        #arabicModalBanner { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: none; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.3s ease; }
-        .arabic-card { background: #3b231d; color: white; border-radius: 26px; padding: 30px 22px; text-align: center; border: 1.5px solid rgba(255,255,255,0.2); box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 320px; }
-        .arabic-icon { font-size: 48px; margin-bottom: 12px; }
-        .arabic-title { font-size: 22px; font-weight: 800; color: #ffffff; margin-bottom: 6px; }
-        .arabic-sub { font-size: 14px; color: #d7ccc8; line-height: 1.5; margin-bottom: 18px; }
-        .btn-close-ar { background: #ffffff; color: #3b231d; font-weight: 800; border: none; padding: 10px 24px; border-radius: 12px; font-size: 14px; cursor: pointer; }
+        /* Screens */
+        .screen { display: none; padding: 20px; flex: 1; flex-direction: column; }
+        .screen.active { display: flex; }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Niqati Style Customer Card View */
+        .customer-card-box { background: var(--coffee); color: white; border-radius: 28px; padding: 26px 20px; box-shadow: 0 20px 40px rgba(59,35,29,0.3); text-align: center; }
+        .brand-logo-txt { font-size: 28px; font-weight: 800; letter-spacing: 0.5px; }
+        .brand-sub { font-size: 13px; color: #d7ccc8; margin-top: 4px; }
+        .stamps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 22px 0 16px; }
+        .stamp-slot { aspect-ratio: 1; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; background: rgba(255,255,255,0.08); border: 1.5px dashed rgba(255,255,255,0.25); color: rgba(255,255,255,0.3); }
+        .stamp-slot.active { background: white; border: 1.5px solid white; color: var(--coffee); box-shadow: 0 8px 20px rgba(0,0,0,0.25); transform: scale(1.04); }
+        .qr-wrapper { background: white; padding: 12px; border-radius: 20px; display: inline-block; margin-top: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
 
-        /* Broadcast Banner */
-        #liveNotifBanner { background: #3b231d; color: white; padding: 14px 16px; border-radius: 16px; margin-bottom: 14px; display: none; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px rgba(59,35,29,0.2); }
+        /* Niqati Style Auth Screen */
+        .auth-header { background: linear-gradient(135deg, #fb923c, #ea580c); padding: 50px 20px 35px; text-align: center; color: white; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; position: relative; }
+        .auth-header .logo-badge { width: 68px; height: 68px; background: white; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 12px 24px rgba(0,0,0,0.15); margin-bottom: 12px; }
+        .auth-sheet { padding: 25px 20px; flex: 1; }
+        .input-group { margin-bottom: 16px; text-align: right; }
+        .input-group label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+        .input-field { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 14px; outline: none; transition: 0.2s; }
+        .input-field:focus { border-color: var(--primary); background: white; }
+        .btn-primary { width: 100%; padding: 15px; border-radius: 14px; border: none; background: var(--primary); color: white; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 20px rgba(249,115,22,0.35); transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
 
-        /* Loyalty Card */
-        .loyalty-card { background: #3b231d; color: #ffffff; border-radius: 26px; padding: 26px 20px; box-shadow: 0 16px 36px rgba(59,35,29,0.25); text-align: center; }
-        .brand-title { font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; }
-        .brand-sub { font-size: 13px; color: #d7ccc8; margin-top: 4px; font-weight: 500; }
-        .status-txt { font-size: 13px; color: #f5ebe6; margin-top: 10px; font-weight: 700; }
+        /* Admin / Owner Dashboard */
+        .admin-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
+        .join-code-card { background: linear-gradient(135deg, #3b82f6, #6366f1); border-radius: 24px; padding: 22px; color: white; margin-bottom: 20px; box-shadow: 0 12px 28px rgba(59,130,246,0.25); }
+        .join-code-box { background: rgba(255,255,255,0.18); border-radius: 16px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-weight: 800; letter-spacing: 1px; font-size: 18px; }
 
-        /* Stamp Grid */
-        .stamps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0 16px; }
-        .stamp-slot { aspect-ratio: 1; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; transition: all 0.3s; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(255,255,255,0.2); color: rgba(255,255,255,0.25); opacity: 0.35; }
-        .stamp-slot.active { background: #ffffff; border: 1.5px solid #ffffff; color: #3b231d; opacity: 1; box-shadow: 0 6px 16px rgba(0,0,0,0.3); transform: scale(1.04); }
+        /* Niqati Menu Cards */
+        .menu-card { background: white; border: 1.5px solid #f1f5f9; border-radius: 20px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        .menu-card:active { background: #f8fafc; transform: scale(0.99); }
+        .menu-icon-box { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; }
 
-        .qr-card { background: #ffffff; padding: 12px; border-radius: 18px; display: inline-block; margin-top: 5px; box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
-        .qr-help { font-size: 12px; color: #d7ccc8; margin-top: 8px; font-weight: 600; }
-
-        .staff-btn { background: none; border: none; color: #8d7b77; font-size: 12px; font-weight: 700; margin-top: 15px; cursor: pointer; text-align: center; }
-        
-        /* Clean Footer Info */
-        .footer-dev { text-align: center; font-size: 11px; color: #998a86; margin-top: 22px; font-weight: 600; cursor: pointer; line-height: 1.6; }
+        /* Bottom Nav Bar */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 420px; background: white; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-around; padding: 10px 0 12px; z-index: 100; box-shadow: 0 -4px 16px rgba(0,0,0,0.03); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 700; color: #94a3b8; cursor: pointer; border: none; background: none; }
+        .nav-item.active { color: var(--primary); }
+        .nav-scan-btn { width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #fb923c, #ea580c); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 8px 18px rgba(234,88,12,0.35); border: none; cursor: pointer; }
 
         /* Modals */
-        .modal-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 1000; display: none; justify-content: center; align-items: flex-end; }
-        .modal-body { width: 100%; max-width: 400px; background: white; border-top-left-radius: 28px; border-top-right-radius: 28px; padding: 25px 20px 35px; max-height: 85vh; overflow-y: auto; text-align: right; }
-        input, select, textarea { width: 100%; padding: 13px 15px; border-radius: 12px; border: 1.5px solid #e0d8d5; background: #faf7f6; margin-bottom: 12px; font-size: 14px; outline: none; color: #3b231d; font-family: inherit; }
-        .btn-full { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; }
-        .btn-brown { background: #3b231d; color: white; }
+        .modal-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2000; display: none; justify-content: center; align-items: flex-end; }
+        .modal-body { width: 100%; max-width: 420px; background: white; border-top-left-radius: 28px; border-top-right-radius: 28px; padding: 25px 20px 35px; max-height: 85vh; overflow-y: auto; text-align: right; }
     </style>
 </head>
 <body>
 
-<!-- Arabic Welcome / Stamp Animation Modal -->
-<div id="arabicModalBanner">
-    <div class="arabic-card">
-        <div class="arabic-icon">☕✨</div>
-        <div class="arabic-title">Cup And Go</div>
-        <div class="arabic-sub" id="arModalSub">أهلاً بك في Cup And Go! تم تفعيل بطاقتك بنجاح. اجمع الأكواب واحصل على مشروبك المجاني! 🎁</div>
-        <button class="btn-close-ar" onclick="closeArBanner()">استمرار / Continue</button>
-    </div>
-</div>
+<div class="app-wrapper">
 
-<!-- About / Developer Info Modal -->
-<div id="aboutModal" class="modal-screen" style="align-items: center;">
-    <div class="modal-body" style="border-radius: 26px; text-align: center;">
-        <div style="font-size: 38px; margin-bottom: 8px;">☕</div>
-        <h3 style="color: #3b231d; font-weight: 800; margin-bottom: 4px;">Cup And Go Loyalty System</h3>
-        <p style="font-size: 12px; color: #7d6b67; margin-bottom: 14px;">Version 2.5 • Smart Digital Pass</p>
-        
-        <div style="background: #faf7f6; padding: 14px; border-radius: 14px; font-size: 13px; color: #3b231d; border: 1px solid #eee; margin-bottom: 15px; text-align: center;">
-            <div style="font-size: 11px; color: #7d6b67; margin-bottom: 4px;">SYSTEM DEVELOPER</div>
-            <b>Mohammed Ashik</b>
+    <!-- 1. Customer View (Auto Registration via QR) -->
+    <div id="screenCustomer" class="screen active" style="padding-bottom: 40px;">
+        <div class="customer-card-box">
+            <div style="font-size: 34px; margin-bottom: 4px;">☕</div>
+            <div class="brand-logo-txt">Cup And Go</div>
+            <p class="brand-sub">كب آند جو • اجمع الأكواب واحصل على مشروبك المجاني 🎁</p>
+
+            <div style="font-size: 13px; color: #f5ebe6; margin-top: 14px; font-weight: 700;">
+                الأكواب المكتملة: <b id="lblCollectedCount" style="color:#ffffff;">0</b> / 8
+            </div>
+
+            <!-- 8 Stamps Grid -->
+            <div class="stamps-grid" id="stampsContainer"></div>
+
+            <div class="qr-wrapper">
+                <div id="customerQr"></div>
+            </div>
+            <p style="font-size: 12px; color: #d7ccc8; margin-top: 10px; font-weight: 600;">أظهر هذا الرمز للكاشير عند كل طلب</p>
         </div>
 
-        <p style="font-size: 11px; color: #888; margin-bottom: 18px;">All Rights Reserved © 2026 Cup And Go</p>
-        <button class="btn-full btn-brown" onclick="document.getElementById('aboutModal').style.display='none'">إغلاق / Close</button>
+        <div style="margin-top: 25px; text-align: center;">
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;" id="custInfoLbl">تعديل بيانات البطاقة</p>
+            <button onclick="openCustomerRegModal()" style="background: #f1f5f9; border: none; padding: 10px 18px; border-radius: 12px; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer;">📝 تحديث الاسم ورقم الجوال</button>
+            <br>
+            <button onclick="navigateTo('screenSignIn')" style="background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 800; margin-top: 20px; cursor: pointer;">🔐 بوابة الموظفين والملاك (Sign In)</button>
+        </div>
     </div>
-</div>
 
-<div class="app-container">
+    <!-- 2. Niqati Style Owner Sign In Screen -->
+    <div id="screenSignIn" class="screen" style="padding: 0;">
+        <div class="auth-header">
+            <div class="logo-badge">🏷️</div>
+            <h2 style="font-weight: 800; font-size: 24px;">Sign in</h2>
+            <p style="font-size: 13px; opacity: 0.9; margin-top: 4px;">لوحة تحكم كب آند جو (Cup And Go)</p>
+        </div>
+        <div class="auth-sheet">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 20px; font-weight: 800;">تسجيل الدخول</h3>
+                <button onclick="toggleSignUpMode()" id="btnSwitchAuth" style="background: #fff7ed; border: none; color: var(--primary); font-weight: 800; padding: 6px 14px; border-radius: 10px; font-size: 12px; cursor: pointer;">Create account</button>
+            </div>
 
-    <!-- Broadcast Notification Alert -->
-    <div id="liveNotifBanner">
-        <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:20px;">📢</span>
-            <div>
-                <div style="font-size:11px; color:#d7ccc8; font-weight:700;" id="notifTitle">Cup And Go - عرض خاص</div>
-                <div style="font-size:12px; font-weight:600;" id="notifBody">مرحباً بكم في كب آند جو!</div>
+            <div id="signUpFields" style="display: none;">
+                <div class="input-group">
+                    <label>اسم المالك (Owner Name)</label>
+                    <input type="text" id="authOwnerName" class="input-field" placeholder="محمد عاشق">
+                </div>
+                <div class="input-group">
+                    <label>رقم الجوال (Mobile Number)</label>
+                    <input type="tel" id="authOwnerPhone" class="input-field" placeholder="05xxxxxxxx">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Email (البريد الإلكتروني)</label>
+                <input type="email" id="authEmail" class="input-field" placeholder="name@example.com">
+            </div>
+
+            <div class="input-group">
+                <label>Password (كلمة المرور)</label>
+                <input type="password" id="authPass" class="input-field" placeholder="••••••••">
+            </div>
+
+            <button class="btn-primary" id="authActionBtn" onclick="handleOwnerAuth()">Log in</button>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">By continuing you agree to Terms & Conditions</p>
+                <button onclick="openJoinBusinessModal()" style="background: none; border: none; color: var(--primary); font-size: 14px; font-weight: 800; cursor: pointer; text-decoration: underline;">Join a business (دخول الكاشير بكود)</button>
+                <br>
+                <button onclick="navigateTo('screenCustomer')" style="background: none; border: none; color: #64748b; font-size: 12px; font-weight: 700; margin-top: 15px; cursor: pointer;">← العودة لبطاقة العميل</button>
             </div>
         </div>
-        <button onclick="document.getElementById('liveNotifBanner').style.display='none'" style="background:none; border:none; color:white; font-size:16px; cursor:pointer;">✕</button>
     </div>
 
-    <!-- Customer Card -->
-    <div class="loyalty-card">
-        <div class="brand-title">Cup And Go</div>
-        <div class="brand-sub">كب آند جو • اجمع الأكواب واحصل على مشروب مجاني! 🎁</div>
-        <div class="status-txt">الأكواب المكتملة: <b id="lblCollectedCount" style="color:#ffffff;">0</b> / <span id="lblTotalGoal">8</span></div>
-
-        <!-- Dynamic Stamps Grid -->
-        <div class="stamps-grid" id="stampsContainer"></div>
-
-        <!-- Customer QR Box -->
-        <div class="qr-card">
-            <div id="qrcode"></div>
+    <!-- 3. Owner Main Dashboard (Admin) -->
+    <div id="screenAdmin" class="screen" style="padding-bottom: 80px;">
+        <div class="admin-header">
+            <div>
+                <h3 style="font-weight: 800; font-size: 18px; color: #0f172a;">Manage business</h3>
+                <p style="font-size: 12px; color: #64748b;">Cup And Go • لوحة الإدارة</p>
+            </div>
+            <button onclick="auth.signOut(); navigateTo('screenSignIn');" style="background: #fee2e2; border: none; color: #dc2626; font-size: 11px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer;">خروج</button>
         </div>
-        <p class="qr-help">أظهر هذا الرمز للكاشير في Cup And Go عند كل طلب</p>
+
+        <!-- Join Code Niqati Card -->
+        <div class="join-code-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="font-size: 16px; font-weight: 800;">Join code</h4>
+                    <p style="font-size: 11px; opacity: 0.9;" id="lblCodeStatus">Enabled – employees can join</p>
+                </div>
+                <button onclick="toggleCodeStatus()" id="btnSuspendCode" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">Suspend</button>
+            </div>
+            <div class="join-code-box">
+                <span id="displayJoinCode">NQT-7JKYV5</span>
+                <button onclick="regenerateCode()" style="background: none; border: none; color: white; font-size: 12px; font-weight: 700; cursor: pointer;">🔄 كود جديد</button>
+            </div>
+        </div>
+
+        <!-- Analytics Overview -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; text-align: center;">
+                <div style="font-size: 10px; color: #64748b; font-weight: 700;">العملاء</div>
+                <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 4px;" id="statCust">0</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; text-align: center;">
+                <div style="font-size: 10px; color: #64748b; font-weight: 700;">الأكواب</div>
+                <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 4px;" id="statCups">0</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; text-align: center;">
+                <div style="font-size: 10px; color: #64748b; font-weight: 700;">الهدايا</div>
+                <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 4px;" id="statRedeemed">0</div>
+            </div>
+        </div>
+
+        <!-- Niqati Management Cards -->
+        <div class="menu-card">
+            <div class="menu-icon-box" style="background: #22c55e;">✓</div>
+            <div style="flex: 1; text-align: right;">
+                <div style="font-weight: 800; font-size: 14px;">Card design request</div>
+                <div style="font-size: 12px; color: #22c55e; font-weight: 700;">Cup And Go • Completed</div>
+            </div>
+        </div>
+
+        <div class="menu-card" onclick="openScannerModal()">
+            <div class="menu-icon-box" style="background: #8b5cf6;">📷</div>
+            <div style="flex: 1; text-align: right;">
+                <div style="font-weight: 800; font-size: 14px;">ماسح الكاشير (Scanner)</div>
+                <div style="font-size: 12px; color: #64748b;">مسح بطاقات العملاء وإضافة الأكواب</div>
+            </div>
+        </div>
+
+        <div class="menu-card" onclick="openBroadcastModal()">
+            <div class="menu-icon-box" style="background: #3b82f6;">📢</div>
+            <div style="flex: 1; text-align: right;">
+                <div style="font-weight: 800; font-size: 14px;">إرسال عرض ترويجي (Broadcast)</div>
+                <div style="font-size: 12px; color: #64748b;">إرسال إشعار مباشر لجميع العملاء</div>
+            </div>
+        </div>
     </div>
 
-    <button class="staff-btn" onclick="openStaffLogin()">⚙️ لوحة تحكم الموظف / المالك</button>
-
-    <!-- Footer Developer / Software Info -->
-    <div class="footer-dev" onclick="document.getElementById('aboutModal').style.display='flex'">
-        <div>Cup And Go © 2026 • All Rights Reserved</div>
-        <div style="font-size: 10px; opacity: 0.8;">Developed by <b>Mohammed Ashik</b></div>
+    <!-- Bottom Navigation Bar for Admin/Staff -->
+    <div class="bottom-nav" id="adminBottomNav" style="display: none;">
+        <button class="nav-item active" onclick="navigateTo('screenAdmin')">
+            <span style="font-size: 18px;">🏠</span>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('screenAdmin')">
+            <span style="font-size: 18px;">📊</span>
+            <span>Analytics</span>
+        </button>
+        <button class="nav-scan-btn" onclick="openScannerModal()">📷</button>
+        <button class="nav-item" onclick="navigateTo('screenCustomer')">
+            <span style="font-size: 18px;">👥</span>
+            <span>Card</span>
+        </button>
+        <button class="nav-item" onclick="navigateTo('screenAdmin')">
+            <span style="font-size: 18px;">🛡️</span>
+            <span>Admin</span>
+        </button>
     </div>
 
-    <!-- Scanner Modal -->
+    <!-- Modals -->
+    <!-- 1. Join Business (Cashier PIN) Modal -->
+    <div class="modal-screen" id="modalJoinBusiness">
+        <div class="modal-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-weight:800;">🔑 Join a business</h3>
+                <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+            <p style="font-size:12px; color:#64748b; margin-bottom:14px;">أدخل كود الانضمام الممنوح لك من إدارة Cup And Go:</p>
+            <input type="text" id="inputJoinCode" class="input-field" placeholder="NQT-XXXXXX" style="text-transform:uppercase; font-weight:800; text-align:center; font-size:18px; letter-spacing:2px; margin-bottom:14px;">
+            <button class="btn-primary" onclick="verifyJoinCode()">دخول الكاشير والماسح 🚀</button>
+        </div>
+    </div>
+
+    <!-- 2. Customer Profile Update Modal -->
+    <div class="modal-screen" id="modalCustomerReg">
+        <div class="modal-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-weight:800;">📝 بيانات بطاقة العميل</h3>
+                <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+            <div class="input-group">
+                <label>الاسم الكامل</label>
+                <input type="text" id="custRegName" class="input-field" placeholder="اسمك">
+            </div>
+            <div class="input-group">
+                <label>رقم الجوال</label>
+                <input type="tel" id="custRegPhone" class="input-field" placeholder="05xxxxxxxx">
+            </div>
+            <button class="btn-primary" onclick="saveCustomerProfile()">حفظ وتحديث البطاقة ☕</button>
+        </div>
+    </div>
+
+    <!-- 3. Scanner Modal -->
     <div class="modal-screen" id="modalScanner">
         <div class="modal-body">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3 style="font-weight:800; color:#3b231d;">📷 ماسح الكاشير</h3>
+                <h3 style="font-weight:800;">📷 ماسح الكاشير</h3>
                 <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
             </div>
-            <div id="reader" style="border-radius:14px; overflow:hidden; margin-bottom:12px;"></div>
-            <div id="scanResultBox" style="display:none; background:#faf7f6; padding:15px; border-radius:14px; margin-top:8px; border:1px solid #e0d8d5;">
-                <p style="font-size:12px; color:#7d6b67;">معرف العميل: <b id="resCustId" style="color:#3b231d;"></b></p>
-                <p style="font-size:22px; font-weight:800; color:#3b231d; margin:4px 0;">الأكواب: <span id="resStamps">0</span></p>
+            <div id="reader" style="border-radius:16px; overflow:hidden; margin-bottom:12px;"></div>
+            <div id="scanResultBox" style="display:none; background:#f8fafc; padding:15px; border-radius:16px; border:1px solid #e2e8f0;">
+                <p style="font-size:12px; color:#64748b;">العميل: <b id="resCustName" style="color:#0f172a;"></b></p>
+                <p style="font-size:22px; font-weight:800; color:#0f172a; margin:4px 0;">الأكواب: <span id="resStamps">0</span> / 8</p>
                 <div style="display:flex; gap:8px; margin-top:10px;">
-                    <button class="btn-full btn-brown" onclick="addCupToCustomer()">➕ إضافة كوب ☕</button>
-                    <button class="btn-full" style="background:#dc2626; color:white;" onclick="redeemReward()">🎁 استبدال المكافأة</button>
+                    <button class="btn-primary" style="background:#22c55e;" onclick="addCupToCustomer()">➕ إضافة كوب ☕</button>
+                    <button class="btn-primary" style="background:#ef4444;" onclick="redeemReward()">🎁 استبدال المكافأة</button>
                 </div>
             </div>
-            <button class="btn-full" style="background:#ede7e4; color:#3b231d; margin-top:10px;" onclick="openBroadcastModal()">📢 إرسال رسالة للجميع</button>
         </div>
     </div>
 
-    <!-- Broadcast Modal -->
+    <!-- 4. Broadcast Modal -->
     <div class="modal-screen" id="modalBroadcast">
         <div class="modal-body">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3 style="font-weight:800; color:#3b231d;">📢 إرسال رسالة للعملاء</h3>
+                <h3 style="font-weight:800;">📢 إرسال عرض للعملاء</h3>
                 <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
             </div>
-            <input type="text" id="msgTitle" placeholder="عنوان العرض (مثال: خصم خاص!)">
-            <textarea id="msgBody" rows="3" placeholder="تفاصيل العرض"></textarea>
-            <button class="btn-full btn-brown" onclick="sendBroadcast()">إرسال لجميع العملاء 🚀</button>
-            <button class="btn-full" style="background:#dc2626; color:white; margin-top:8px;" onclick="clearBroadcast()">مسح الرسالة الحالية</button>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDI8tfzkWABqaAB9e0KGPj0",
-        authDomain: "cup-and-go-53e2d.firebaseapp.com",
-        projectId: "cup-and-go-53e2d",
-        storageBucket: "cup-and-go-53e2d.firebasestorage.app",
-        messagingSenderId: "555868986103",
-        appId: "1:555868986103:web:3a89b804a7"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    let totalSlots = 8;
-    let cupIcon = "☕";
-    let scannerObj = null;
-    let scannedId = "";
-
-    // 1. Customer UID
-    let customerId = localStorage.getItem("cup_card_uid");
-    let isFirstTime = false;
-    if(!customerId) {
-        customerId = "CUP-" + Math.floor(100000 + Math.random() * 900000);
-        localStorage.setItem("cup_card_uid", customerId);
-        isFirstTime = true;
-    }
-
-    // 2. Render QR
-    const qrBox = document.getElementById("qrcode");
-    new QRCode(qrBox, { text: customerId, width: 125, height: 125 });
-
-    // 3. Welcome Popup
-    window.addEventListener("DOMContentLoaded", () => {
-        if(isFirstTime) {
-            document.getElementById("arModalSub").innerText = "أهلاً بك في Cup And Go! تم تفعيل بطاقتك بنجاح. اجمع الأكواب واحصل على مشروبك المجاني! 🎁";
-            document.getElementById("arabicModalBanner").style.display = "flex";
-        }
-    });
-
-    function closeArBanner() {
-        document.getElementById("arabicModalBanner").style.display = "none";
-    }
-
-    // 4. Live Sync Stamps
-    let lastStampsCount = null;
-    db.collection("loyalty").doc(customerId).onSnapshot((doc) => {
-        let stamps = 0;
-        if(doc.exists) {
-            stamps = doc.data().stamps || 0;
-            if(lastStampsCount !== null && stamps > lastStampsCount) {
-                document.getElementById("arModalSub").innerText = `مبروك! تمت إضافة كوب في Cup And Go ☕\nأصبح لديك الآن ${stamps} أكواب.`;
-                document.getElementById("arabicModalBanner").style.display = "flex";
-            }
-        } else {
-            db.collection("loyalty").doc(customerId).set({ stamps: 0, createdAt: new Date() });
-        }
-        lastStampsCount = stamps;
-        document.getElementById("lblCollectedCount").innerText = stamps;
-        renderStamps(stamps);
-    });
-
-    function renderStamps(stamps) {
-        const grid = document.getElementById("stampsContainer");
-        grid.innerHTML = "";
-        for(let i = 1; i <= totalSlots; i++) {
-            const slot = document.createElement("div");
-            const isTaken = i <= stamps;
-            slot.className = "stamp-slot" + (isTaken ? " active" : "");
-            slot.innerHTML = isTaken ? cupIcon : (i === totalSlots ? "🎁" : i);
-            grid.appendChild(slot);
-        }
-    }
-
-    // 5. Broadcast Sync
-    db.collection("settings").doc("broadcast_message").onSnapshot((doc) => {
-        if(doc.exists && doc.data().active) {
-            const d = doc.data();
-            document.getElementById("notifTitle").innerText = "Cup And Go - " + (d.title || "عرض المتجر");
-            document.getElementById("notifBody").innerText = d.body || "";
-            document.getElementById("liveNotifBanner").style.display = "flex";
-        } else {
-            document.getElementById("liveNotifBanner").style.display = "none";
-        }
-    });
-
-    // 6. Cashier Functions
-    function openStaffLogin() {
-        const pin = prompt("أدخل الرقم السري للكاشير / المالك:");
-        if(pin !== "1234") return alert("الرمز غير صحيح!");
-        document.getElementById("modalScanner").style.display = "flex";
-        startScanner();
-    }
-
-    function startScanner() {
-        if(!scannerObj) {
-            scannerObj = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
-            scannerObj.render((text) => {
-                scannedId = text.trim();
-                db.collection("loyalty").doc(scannedId).get().then((doc) => {
-                    if(doc.exists) {
-                        const d = doc.data();
-                        document.getElementById("scanResultBox").style.display = "block";
-                        document.getElementById("resCustId").innerText = scannedId;
-                        document.getElementById("resStamps").innerText = d.stamps || 0;
-                    } else {
-                        alert("رمز البطاقة غير مسجل");
-                    }
-                });
-            });
-        }
-    }
-
-    function addCupToCustomer() {
-        if(!scannedId) return;
-        const ref = db.collection("loyalty").doc(scannedId);
-        db.runTransaction((t) => {
-            return t.get(ref).then((doc) => {
-                let s = (doc.exists && doc.data().stamps) ? doc.data().stamps : 0;
-                let next = s + 1;
-                t.update(ref, { stamps: next });
-                return next;
-            });
-        }).then((newStamps) => {
-            document.getElementById("resStamps").innerText = newStamps;
-            alert(`تمت إضافة كوب في Cup And Go! الإجمالي: ${newStamps}`);
-        });
-    }
-
-    function redeemReward() {
-        if(!scannedId) return;
-        if(confirm("استبدال المكافأة وإعادة ضبط البطاقة؟")) {
-            db.collection("loyalty").doc(scannedId).update({ stamps: 0 }).then(() => {
-                document.getElementById("resStamps").innerText = 0;
-                alert("تم استبدال الهدية بنجاح في Cup And Go!");
-            });
-        }
-    }
-
-    function openBroadcastModal() {
-        document.getElementById("modalScanner").style.display = "none";
-        document.getElementById("modalBroadcast").style.display = "flex";
-    }
-
-    function sendBroadcast() {
-        const title = document.getElementById("msgTitle").value.trim();
-        const body = document.getElementById("msgBody").value.trim();
-        if(!title || !body) return alert("يرجى تعبئة العنوان والرسالة");
-
-        db.collection("settings").doc("broadcast_message").set({ title: title, body: body, active: true }).then(() => {
-            alert("تم إرسال العرض لجميع عملاء Cup And Go!");
-            closeModals();
-        });
-    }
-
-    function clearBroadcast() {
-        db.collection("settings").doc("broadcast_message").set({ active: false }).then(() => {
-            alert("تم مسح الرسالة!");
-            closeModals();
-        });
-    }
-
-    function closeModals() {
-        document.querySelectorAll(".modal-screen").forEach(m => m.style.display = "none");
-        if(scannerObj) { scannerObj.clear(); scannerObj = null; }
-    }
-</script>
-</body>
-</html>
+            <input type="text" id="msgTitle" class="input-field" placeholder="عنوان العرض (مثال: خصم اليوم!)" style="margin-bottom:10px;">
+            <textarea id="msgBody" class="input-field" rows="3" placeholder="تفاصيل العرض للعملاء..." style="margin-bottom:12px;"></t
