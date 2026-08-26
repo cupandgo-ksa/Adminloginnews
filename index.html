@@ -3,113 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cup And Go - Loyalty & Staff Hub</title>
+    <title>Cup And Go - Premium Loyalty Engine</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; }
-        body { background: #121212; color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
-        .app-wrapper { width: 100%; max-width: 400px; }
+        body { background: #0a0a0c; color: #f5f5f7; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
+        .app-wrapper { width: 100%; max-width: 420px; position: relative; }
         
-        .pass-card { background: #3b231d; border-radius: 24px; padding: 25px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .brand-name { font-size: 24px; font-weight: 800; color: #fff; }
-        .brand-sub { font-size: 13px; color: #d7ccc8; margin-top: 4px; }
-        
-        .stamps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 25px 0; }
-        .slot { aspect-ratio: 1; background: rgba(255,255,255,0.08); border: 1.5px dashed rgba(255,255,255,0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #d7ccc8; }
-        .slot.active { background: #ff6b00; border-color: #ff6b00; color: white; box-shadow: 0 4px 12px rgba(255,107,0,0.4); }
+        /* Splash Screen */
+        #splashScreen { position: fixed; inset: 0; background: #0f0b0a; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; transition: opacity 0.6s ease, visibility 0.6s; }
+        .splash-icon { font-size: 70px; animation: glowPulse 1.6s infinite alternate; }
+        .splash-title { font-size: 28px; font-weight: 800; color: #ff6b00; margin-top: 15px; }
+        @keyframes glowPulse { 0% { transform: scale(0.95); filter: drop-shadow(0 0 10px rgba(255,107,0,0.3)); } 100% { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(255,107,0,0.8)); } }
 
-        .qr-box { background: white; padding: 12px; border-radius: 16px; display: inline-block; margin-bottom: 12px; }
+        /* Card Panels */
+        .card-box { background: #16161a; border-radius: 26px; padding: 24px 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.06); display: none; animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+        .brand-header { font-size: 24px; font-weight: 800; text-align: center; }
+        .brand-sub { font-size: 13px; color: #8e8e93; margin-top: 4px; text-align: center; margin-bottom: 20px; }
         
-        .admin-panel { background: #1e1e1e; border-radius: 24px; padding: 20px; text-align: center; display: none; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #444; background: #2a2a2a; color: white; border-radius: 10px; font-size: 14px; margin-bottom: 10px; outline: none; }
-        label { display: block; text-align: left; font-size: 12px; color: #bbb; margin-bottom: 4px; font-weight: 600; }
+        input, select { width: 100%; padding: 13px 15px; border: 1.5px solid #28282f; background: #1e1e24; color: white; border-radius: 12px; font-size: 14px; margin-bottom: 12px; outline: none; }
+        input:focus, select:focus { border-color: #ff6b00; }
+        label { display: block; font-size: 12px; color: #a1a1aa; margin-bottom: 5px; font-weight: 600; text-align: left; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px; }
-        .btn-orange { background: #ff6b00; color: white; }
-        .btn-gray { background: rgba(255,255,255,0.1); color: #aaa; font-size: 12px; }
-        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 8px; font-size: 12px; background: #333; color: #bbb; border: none; border-radius: 8px; cursor: pointer; }
-        .tab-btn.active { background: #ff6b00; color: white; font-weight: bold; }
-        .staff-item { display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-orange { background: linear-gradient(135deg, #ff7a00, #ff4d00); color: white; box-shadow: 0 6px 20px rgba(255,107,0,0.35); }
+        .btn-dark { background: rgba(255,255,255,0.05); color: #bbb; border: 1px solid rgba(255,255,255,0.08); }
+        
+        /* Analytics Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+        .stat-card { background: #202028; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); text-align: left; }
+        .stat-title { font-size: 11px; color: #8e8e93; text-transform: uppercase; font-weight: 700; }
+        .stat-val { font-size: 22px; font-weight: 800; color: #ff7a00; margin-top: 4px; }
+
+        /* Stamp Grid */
+        .stamps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
+        .slot { aspect-ratio: 1; background: rgba(255,255,255,0.04); border: 1.5px dashed rgba(255,255,255,0.18); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #777; transition: all 0.3s; }
+        .slot.active { background: #ff6b00; border-color: #ff6b00; color: white; box-shadow: 0 6px 16px rgba(255,107,0,0.4); }
+        .qr-card { background: white; padding: 12px; border-radius: 16px; display: inline-block; margin: 10px 0; }
+
+        /* Admin Tabs */
+        .nav-tabs { display: flex; gap: 4px; background: #111115; padding: 4px; border-radius: 12px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05); }
+        .tab-btn { flex: 1; padding: 9px 4px; font-size: 11px; background: transparent; color: #888; border: none; border-radius: 9px; cursor: pointer; font-weight: 700; }
+        .tab-btn.active { background: #ff6b00; color: white; }
+        
+        .staff-item { background: #202028; padding: 12px; border-radius: 12px; margin-bottom: 10px; text-align: left; border: 1px solid rgba(255,255,255,0.04); }
+        .perm-toggle { display: flex; gap: 10px; font-size: 11px; color: #aaa; margin-top: 6px; }
+        .perm-toggle input { width: auto; margin: 0 4px 0 0; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+<div id="splashScreen">
+    <div class="splash-icon" id="splashIcon">☕</div>
+    <div class="splash-title">Cup And Go</div>
+    <p style="color: #71717a; font-size: 13px; margin-top: 5px;">Smart Loyalty Platform</p>
+</div>
+
 <div class="app-wrapper">
-    <!-- 1. Customer Digital Pass Screen -->
-    <div class="pass-card" id="customerCard">
-        <div class="brand-name" id="uiBrandName">Cup And Go</div>
-        <div class="brand-sub" id="uiOfferText">Collect stamps & get free drinks! 🎁</div>
+    <!-- 1. Unified Login Portal -->
+    <div class="card-box" id="loginScreen">
+        <h2 class="brand-header">Welcome</h2>
+        <p class="brand-sub">Access your loyalty pass or staff portal</p>
+
+        <label>Customer Name</label>
+        <input type="text" id="custName" placeholder="Your Name">
+        <label>Mobile Number</label>
+        <input type="tel" id="custPhone" placeholder="Mobile Number (05XXXXXXXX)">
+        <button class="btn btn-orange" onclick="loginCustomer()">Open My Loyalty Pass 🎁</button>
+
+        <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 15px;">
+            <button class="btn btn-dark" onclick="openStaffModal()">🔒 Staff / Owner Portal (PIN)</button>
+        </div>
+    </div>
+
+    <!-- 2. Customer Digital Pass -->
+    <div class="card-box" id="customerCardScreen" style="background: linear-gradient(145deg, #2b1814, #18100e); border: 1px solid rgba(255,107,0,0.2);">
+        <div class="brand-header" id="uiBrandName">Cup And Go</div>
+        <div class="brand-sub" id="uiOfferText">Collect stamps & get free drinks!</div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 12px;">
+            <span style="font-size: 13px; color: #ccc;">Card Holder: <b id="lblCustName" style="color: #ff6b00;"></b></span>
+            <button onclick="logoutCustomer()" style="background: none; border: none; color: #888; font-size: 12px; cursor: pointer;">Exit</button>
+        </div>
 
         <div class="stamps-grid" id="stampsContainer"></div>
 
-        <div class="qr-box">
-            <div id="qrcode"></div>
+        <div style="text-align: center;">
+            <div class="qr-card"><div id="qrcode"></div></div>
+            <p style="font-size: 11px; color: #8e8e93;">Present this QR code at counter</p>
         </div>
-        
-        <p style="font-size: 12px; color: #a89f91; margin-bottom: 15px;">Show this QR code at the counter</p>
-        <button class="btn btn-gray" onclick="openLoginModal()">⚙️ Staff / Owner Login</button>
     </div>
 
-    <!-- 2. Staff / Owner Hub Screen -->
-    <div class="admin-panel" id="adminScreen">
+    <!-- 3. Owner & Staff Hub (with Analytics & Permissions) -->
+    <div class="card-box" id="adminScreen">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
             <div style="text-align:left;">
-                <div style="font-size:11px; color:#888;">Logged as: <b id="lblRole" style="color:#ff6b00;"></b></div>
-                <div style="font-weight:700;" id="lblUser"></div>
+                <div style="font-size:11px; color:#71717a;">Role: <b id="lblRole" style="color:#ff6b00;"></b></div>
+                <div style="font-weight:700; font-size: 14px;" id="lblUser"></div>
             </div>
-            <button class="btn btn-gray" style="margin:0; width:auto; padding:6px 12px;" onclick="logoutStaff()">Logout</button>
+            <button class="btn btn-dark" style="margin:0; width:auto; padding:6px 12px; font-size:12px;" onclick="logoutAdmin()">Logout</button>
         </div>
 
         <div class="nav-tabs">
-            <button class="tab-btn active" id="tabBtnScan" onclick="switchTab('scan')">📷 Scanner</button>
-            <button class="tab-btn" id="tabBtnStaff" onclick="switchTab('staff')">👥 Staff</button>
-            <button class="tab-btn" id="tabBtnSettings" onclick="switchTab('settings')">🎨 Settings</button>
+            <button class="tab-btn active" id="btnTabScan" onclick="switchTab('scan')">📷 Scan</button>
+            <button class="tab-btn" id="btnTabStats" onclick="switchTab('stats')">📊 Analytics</button>
+            <button class="tab-btn" id="btnTabStaff" onclick="switchTab('staff')">👥 Staff</button>
+            <button class="tab-btn" id="btnTabSettings" onclick="switchTab('settings')">⚙️ Config</button>
         </div>
 
         <!-- Scanner Tab -->
         <div id="tabScan">
-            <div id="reader" style="border-radius: 14px; overflow: hidden; margin-bottom: 15px;"></div>
-            <div id="scanResult" style="display: none; background: #2a2a2a; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align:left;">
-                <p style="font-size: 13px; color: #bbb;">Customer: <b id="lblCustId" style="color:white;"></b></p>
-                <p style="font-size: 20px; font-weight: 800; color: #ff6b00; margin: 8px 0;">Stamps: <span id="lblStamps">0</span></p>
-                <button class="btn btn-orange" onclick="addStampToCustomer()">➕ Add +1 Stamp ☕</button>
-                <button class="btn" style="background:#dc2626; color:white;" onclick="resetCustomerStamps()">🎁 Redeem Reward</button>
+            <div id="reader" style="border-radius: 14px; overflow: hidden; margin-bottom: 12px; background: #000;"></div>
+            <div id="scanResult" style="display: none; background: #202028; padding: 14px; border-radius: 14px; text-align:left; border: 1px solid rgba(255,255,255,0.05);">
+                <p style="font-size: 12px; color: #aaa;">Customer: <b id="lblScannedName" style="color:white;"></b></p>
+                <p style="font-size: 22px; font-weight: 800; color: #ff6b00; margin: 4px 0;">Stamps: <span id="lblStampsCount">0</span></p>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="btn btn-orange" id="btnActionAdd" onclick="addStamp()">➕ Add Cup</button>
+                    <button class="btn" id="btnActionRedeem" style="background:#dc2626; color:white;" onclick="redeemReward()">🎁 Redeem</button>
+                </div>
             </div>
         </div>
 
-        <!-- Staff Management Tab (Owner Only) -->
-        <div id="tabStaff" style="display:none; text-align:left;">
-            <label>Add New Employee</label>
-            <input type="text" id="newStaffName" placeholder="Employee Name">
-            <input type="password" id="newStaffPin" placeholder="4-Digit PIN (e.g. 5566)">
-            <button class="btn btn-orange" onclick="addNewEmployee()">+ Add Employee</button>
-            
-            <label style="margin-top:15px;">Active Staff List</label>
-            <div id="staffListContainer">Loading employees...</div>
+        <!-- Analytics Tab -->
+        <div id="tabStats" style="display:none; text-align:left;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Total Customers</div>
+                    <div class="stat-val" id="statCustomers">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Total Cups Given</div>
+                    <div class="stat-val" id="statTotalCups">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Rewards Claimed</div>
+                    <div class="stat-val" id="statRewards">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Active Staff</div>
+                    <div class="stat-val" id="statStaffCount">0</div>
+                </div>
+            </div>
+            <p style="font-size:11px; color:#71717a; text-align:center;">Analytics update automatically in real-time</p>
         </div>
 
-        <!-- Store & Card Settings Tab (Owner Only) -->
+        <!-- Staff Management & Permissions Tab (Owner Only) -->
+        <div id="tabStaff" style="display:none; text-align:left;">
+            <label>Add Cashier / Staff</label>
+            <input type="text" id="newStaffName" placeholder="Staff Name">
+            <input type="password" id="newStaffPin" placeholder="4-Digit PIN">
+            
+            <label>Cashier Permissions</label>
+            <div style="margin-bottom:12px; display:flex; flex-direction:column; gap:6px;">
+                <label style="font-weight:400; font-size:12px;"><input type="checkbox" id="permAdd" checked> Allow adding cups/stamps</label>
+                <label style="font-weight:400; font-size:12px;"><input type="checkbox" id="permRedeem" checked> Allow redeeming free rewards</label>
+                <label style="font-weight:400; font-size:12px;"><input type="checkbox" id="permStats"> Allow viewing analytics</label>
+            </div>
+            <button class="btn btn-orange" onclick="addNewStaffWithPermissions()">+ Save Staff Account</button>
+            
+            <label style="margin-top:16px;">Active Employees & Permissions</label>
+            <div id="staffListContainer" style="max-height: 180px; overflow-y: auto;">Loading...</div>
+        </div>
+
+        <!-- Store & Cup Customization Tab (Owner Only) -->
         <div id="tabSettings" style="display:none; text-align:left;">
-            <label>Brand / Shop Name</label>
-            <input type="text" id="cfgBrand" placeholder="Shop Name">
+            <label>Store Name</label>
+            <input type="text" id="cfgBrand" placeholder="e.g. Cup And Go">
 
             <label>Offer Text</label>
-            <input type="text" id="cfgOffer" placeholder="Offer text">
+            <input type="text" id="cfgOffer" placeholder="e.g. Collect 7 cups & get 1 free!">
 
-            <label>Total Stamps Count</label>
-            <select id="cfgSlots">
-                <option value="5">5 Stamps (4 Cups + 1 Free)</option>
-                <option value="7">7 Stamps (6 Cups + 1 Free)</option>
-                <option value="8">8 Stamps (7 Cups + 1 Free)</option>
-                <option value="10">10 Stamps (9 Cups + 1 Free)</option>
+            <label>Cup / Drink Icon (Choose Stamp Symbol)</label>
+            <select id="cfgIcon">
+                <option value="☕">☕ Classic Hot Coffee</option>
+                <option value="🥤">🥤 Cold Drink / Plastic Cup</option>
+                <option value="🧊">🧊 Ice V60 / Cold Brew</option>
+                <option value="🧋">🧋 Bubble Tea / Milk Cup</option>
+                <option value="🍵">🍵 Matcha / Green Tea</option>
             </select>
 
-            <button class="btn btn-orange" onclick="saveStoreSettings()">Save Changes</button>
+            <label>Card Stamps Goal</label>
+            <select id="cfgSlots">
+                <option value="5">5 Cups (4 Paid + 1 Free)</option>
+                <option value="6">6 Cups (5 Paid + 1 Free)</option>
+                <option value="7">7 Cups (6 Paid + 1 Free)</option>
+                <option value="8">8 Cups (7 Paid + 1 Free)</option>
+                <option value="10">10 Cups (9 Paid + 1 Free)</option>
+            </select>
+
+            <label>Card Color Theme</label>
+            <select id="cfgTheme">
+                <option value="linear-gradient(145deg, #2b1814, #18100e)">Dark Espresso Bronze</option>
+                <option value="linear-gradient(145deg, #181e28, #0f1319)">Midnight Navy Slate</option>
+                <option value="linear-gradient(145deg, #1e1e1e, #111111)">Obsidian Matte Black</option>
+                <option value="linear-gradient(145deg, #422006, #291102)">Royal Amber Gold</option>
+            </select>
+
+            <button class="btn btn-orange" onclick="saveStoreSettings()">Save Changes Live 🚀</button>
         </div>
     </div>
 </div>
@@ -127,81 +224,125 @@
     const db = firebase.firestore();
 
     let totalSlots = 8;
-    let currentUserRole = ""; // owner or staff
+    let cupIcon = "☕";
+    let currentUserRole = "";
+    let activePermissions = { canAdd: true, canRedeem: true, canStats: true };
     let scannerObj = null;
-    let scannedId = "";
+    let scannedPhone = "";
+    let activePhone = localStorage.getItem("cup_active_phone") || "";
+    let activeName = localStorage.getItem("cup_active_name") || "";
 
-    // 1. Live Sync Store Configurations
+    // Splash Engine
+    window.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            const s = document.getElementById("splashScreen");
+            s.style.opacity = "0";
+            setTimeout(() => { s.style.display = "none"; initApp(); }, 500);
+        }, 1300);
+    });
+
+    function initApp() {
+        if(activePhone) openCustomerPass(activePhone, activeName);
+        else document.getElementById("loginScreen").style.display = "block";
+    }
+
+    // Live Store Config Sync
     db.collection("settings").doc("store_config").onSnapshot((doc) => {
         if(doc.exists) {
-            const data = doc.data();
-            if(data.brandName) {
-                document.getElementById("uiBrandName").innerText = data.brandName;
-                document.getElementById("cfgBrand").value = data.brandName;
-            }
-            if(data.offerText) {
-                document.getElementById("uiOfferText").innerText = data.offerText;
-                document.getElementById("cfgOffer").value = data.offerText;
-            }
-            if(data.totalSlots) {
-                totalSlots = parseInt(data.totalSlots);
-                document.getElementById("cfgSlots").value = data.totalSlots;
-            }
-            renderCustomerCard();
+            const d = doc.data();
+            if(d.brandName) { document.getElementById("uiBrandName").innerText = d.brandName; document.getElementById("cfgBrand").value = d.brandName; }
+            if(d.offerText) { document.getElementById("uiOfferText").innerText = d.offerText; document.getElementById("cfgOffer").value = d.offerText; }
+            if(d.totalSlots) { totalSlots = parseInt(d.totalSlots); document.getElementById("cfgSlots").value = d.totalSlots; }
+            if(d.cupIcon) { cupIcon = d.cupIcon; document.getElementById("cfgIcon").value = d.cupIcon; document.getElementById("splashIcon").innerText = d.cupIcon; }
+            if(d.cardTheme) { document.getElementById("customerCardScreen").style.background = d.cardTheme; document.getElementById("cfgTheme").value = d.cardTheme; }
+            if(activePhone) renderStamps(cachedStamps);
         }
     });
 
-    // 2. Customer Pass Auto Creation
-    let myCustId = localStorage.getItem("cup_customer_id");
-    if(!myCustId) {
-        myCustId = "CUP-" + Math.floor(100000 + Math.random() * 900000);
-        localStorage.setItem("cup_customer_id", myCustId);
-        db.collection("loyalty").doc(myCustId).set({ stamps: 0, visits: 1, createdAt: new Date() });
+    // Customer Pass System
+    let cachedStamps = 0;
+    let customerSub = null;
+
+    function loginCustomer() {
+        const name = document.getElementById("custName").value.trim();
+        const phone = document.getElementById("custPhone").value.trim();
+        if(!name || !phone) return alert("Please enter Name and Phone number");
+
+        localStorage.setItem("cup_active_phone", phone);
+        localStorage.setItem("cup_active_name", name);
+        activePhone = phone; activeName = name;
+
+        db.collection("loyalty").doc(phone).get().then((doc) => {
+            if(!doc.exists) {
+                db.collection("loyalty").doc(phone).set({ name: name, phone: phone, stamps: 0, totalVisits: 1, createdAt: new Date() });
+                incrementStat("customers");
+            }
+            openCustomerPass(phone, name);
+        });
     }
-    new QRCode(document.getElementById("qrcode"), { text: myCustId, width: 130, height: 130 });
 
-    let myStamps = 0;
-    db.collection("loyalty").doc(myCustId).onSnapshot((doc) => {
-        myStamps = (doc.exists && doc.data().stamps) ? doc.data().stamps : 0;
-        renderCustomerCard();
-    });
+    function openCustomerPass(phone, name) {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("customerCardScreen").style.display = "block";
+        document.getElementById("lblCustName").innerText = name;
 
-    function renderCustomerCard() {
+        const qrBox = document.getElementById("qrcode");
+        qrBox.innerHTML = "";
+        new QRCode(qrBox, { text: phone, width: 130, height: 130 });
+
+        if(customerSub) customerSub();
+        customerSub = db.collection("loyalty").doc(phone).onSnapshot((doc) => {
+            if(doc.exists) {
+                const data = doc.data();
+                cachedStamps = data.stamps || 0;
+                document.getElementById("lblCustName").innerText = data.name || name;
+                renderStamps(cachedStamps);
+            }
+        });
+    }
+
+    function renderStamps(stamps) {
         const grid = document.getElementById("stampsContainer");
         grid.innerHTML = "";
         for(let i = 1; i <= totalSlots; i++) {
             const slot = document.createElement("div");
-            slot.className = "slot" + (i <= myStamps ? " active" : "");
-            slot.innerHTML = (i <= myStamps) ? "☕" : (i === totalSlots ? "🎁" : i);
+            slot.className = "slot" + (i <= stamps ? " active" : "");
+            slot.innerHTML = (i <= stamps) ? cupIcon : (i === totalSlots ? "🎁" : i);
             grid.appendChild(slot);
         }
     }
 
-    // 3. Multi-user Staff / Owner Authentication
-    function openLoginModal() {
-        const pin = prompt("Enter Owner or Staff PIN:");
+    function logoutCustomer() {
+        localStorage.removeItem("cup_active_phone");
+        localStorage.removeItem("cup_active_name");
+        activePhone = ""; activeName = "";
+        if(customerSub) customerSub();
+        document.getElementById("customerCardScreen").style.display = "none";
+        document.getElementById("loginScreen").style.display = "block";
+    }
+
+    // Owner & Staff Portal
+    function openStaffModal() {
+        const pin = prompt("Enter PIN:");
         if(!pin) return;
 
-        // Check Owner Store Setup
         db.collection("settings").doc("owner_account").get().then((doc) => {
             if(!doc.exists) {
-                // First Time Setup for Store Owner
-                const shop = prompt("First Time Setup! Enter Store Name:");
-                const phone = prompt("Enter Store Mobile Number:");
-                db.collection("settings").doc("owner_account").set({ shopName: shop, phone: phone, pin: pin });
-                db.collection("settings").doc("store_config").set({ brandName: shop, offerText: "Collect stamps & get free drinks!", totalSlots: 8 });
-                loginSuccess("Owner", shop);
+                const shop = prompt("First Time Owner Setup! Enter Shop Name:") || "Cup And Go";
+                db.collection("settings").doc("owner_account").set({ shopName: shop, pin: pin });
+                db.collection("settings").doc("store_config").set({ brandName: shop, offerText: "Collect cups & get free drinks!", totalSlots: 8, cupIcon: "☕", cardTheme: "linear-gradient(145deg, #2b1814, #18100e)" });
+                initDashboard("Owner", shop, { canAdd: true, canRedeem: true, canStats: true });
             } else {
                 const owner = doc.data();
                 if(owner.pin === pin) {
-                    loginSuccess("Owner", owner.shopName || "Owner");
+                    initDashboard("Owner", owner.shopName || "Owner", { canAdd: true, canRedeem: true, canStats: true });
                 } else {
-                    // Check Employees Collection
                     db.collection("staff").doc(pin).get().then((sDoc) => {
                         if(sDoc.exists) {
-                            loginSuccess("Staff", sDoc.data().name);
+                            const sData = sDoc.data();
+                            initDashboard("Staff", sData.name, sData.permissions || { canAdd: true, canRedeem: true, canStats: false });
                         } else {
-                            alert("Invalid PIN code!");
+                            alert("Invalid PIN Code!");
                         }
                     });
                 }
@@ -209,140 +350,10 @@
         });
     }
 
-    function loginSuccess(role, name) {
+    function initDashboard(role, name, perms) {
         currentUserRole = role;
-        document.getElementById("customerCard").style.display = "none";
-        document.getElementById("adminScreen").style.display = "block";
-        document.getElementById("lblRole").innerText = role;
-        document.getElementById("lblUser").innerText = name;
+        activePermissions = perms;
 
-        // Permissions control
-        if(role === "Staff") {
-            document.getElementById("tabBtnStaff").style.display = "none";
-            document.getElementById("tabBtnSettings").style.display = "none";
-        } else {
-            document.getElementById("tabBtnStaff").style.display = "block";
-            document.getElementById("tabBtnSettings").style.display = "block";
-            loadStaffList();
-        }
-        switchTab('scan');
-    }
-
-    function logoutStaff() {
-        document.getElementById("adminScreen").style.display = "none";
-        document.getElementById("customerCard").style.display = "block";
-        if(scannerObj) scannerObj.clear();
-    }
-
-    function switchTab(t) {
-        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-        document.getElementById("tabScan").style.display = t === 'scan' ? 'block' : 'none';
-        document.getElementById("tabStaff").style.display = t === 'staff' ? 'block' : 'none';
-        document.getElementById("tabSettings").style.display = t === 'settings' ? 'block' : 'none';
-
-        if(t === 'scan') {
-            document.getElementById("tabBtnScan").classList.add("active");
-            startScanner();
-        } else {
-            if(scannerObj) scannerObj.clear();
-            if(t === 'staff') document.getElementById("tabBtnStaff").classList.add("active");
-            if(t === 'settings') document.getElementById("tabBtnSettings").classList.add("active");
-        }
-    }
-
-    // 4. Scanner Engine
-    function startScanner() {
-        if(!scannerObj) {
-            scannerObj = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
-            scannerObj.render((text) => {
-                scannedId = text.trim();
-                fetchScannedData(scannedId);
-            });
-        }
-    }
-
-    function fetchScannedData(id) {
-        db.collection("loyalty").doc(id).get().then((doc) => {
-            if(doc.exists) {
-                document.getElementById("scanResult").style.display = "block";
-                document.getElementById("lblCustId").innerText = id;
-                document.getElementById("lblStamps").innerText = doc.data().stamps || 0;
-            } else {
-                alert("Unregistered Customer QR");
-            }
-        });
-    }
-
-    function addStampToCustomer() {
-        if(!scannedId) return;
-        const ref = db.collection("loyalty").doc(scannedId);
-        db.runTransaction((t) => {
-            return t.get(ref).then((doc) => {
-                let s = (doc.data().stamps || 0) + 1;
-                let v = (doc.data().visits || 0) + 1;
-                t.update(ref, { stamps: s, visits: v });
-                return s;
-            });
-        }).then((newS) => {
-            document.getElementById("lblStamps").innerText = newS;
-            alert("Stamp added! Customer pass updated ☕");
-        });
-    }
-
-    function resetCustomerStamps() {
-        if(!scannedId) return;
-        if(confirm("Redeem free cup and reset to 0?")) {
-            db.collection("loyalty").doc(scannedId).update({ stamps: 0 }).then(() => {
-                document.getElementById("lblStamps").innerText = 0;
-                alert("Reward Claimed!");
-            });
-        }
-    }
-
-    // 5. Staff Management (Unlimited)
-    function addNewEmployee() {
-        const name = document.getElementById("newStaffName").value.trim();
-        const pin = document.getElementById("newStaffPin").value.trim();
-        if(!name || !pin) return alert("Please enter staff name and 4-digit PIN");
-
-        db.collection("staff").doc(pin).set({ name: name, pin: pin, createdAt: new Date() }).then(() => {
-            alert("Employee added successfully!");
-            document.getElementById("newStaffName").value = "";
-            document.getElementById("newStaffPin").value = "";
-            loadStaffList();
-        });
-    }
-
-    function loadStaffList() {
-        db.collection("staff").onSnapshot((snapshot) => {
-            let html = "";
-            snapshot.forEach((doc) => {
-                const s = doc.data();
-                html += `
-                    <div class="staff-item">
-                        <div><b>${s.name}</b> (PIN: ${s.pin})</div>
-                        <button onclick="deleteStaff('${s.pin}')" style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">Delete</button>
-                    </div>
-                `;
-            });
-            document.getElementById("staffListContainer").innerHTML = html || "<p style='color:#777;'>No employees added yet.</p>";
-        });
-    }
-
-    function deleteStaff(pin) {
-        if(confirm("Remove this employee?")) {
-            db.collection("staff").doc(pin).delete();
-        }
-    }
-
-    function saveStoreSettings() {
-        const b = document.getElementById("cfgBrand").value.trim();
-        const o = document.getElementById("cfgOffer").value.trim();
-        const s = document.getElementById("cfgSlots").value;
-        db.collection("settings").doc("store_config").set({ brandName: b, offerText: o, totalSlots: s }).then(() => {
-            alert("Settings updated live!");
-        });
-    }
-</script>
-</body>
-</html>
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("customerCardScreen").style.display = "none";
+        d
