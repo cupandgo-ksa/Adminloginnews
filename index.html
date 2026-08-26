@@ -14,19 +14,17 @@
         body { background: #ffffff; color: #1e1e24; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
         .app-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; }
 
-        /* Arabic Popup Welcome / Success Animation */
+        /* Arabic Popup Welcome */
         #arabicModalBanner { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: none; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.3s ease; }
         .arabic-card { background: #3b231d; color: white; border-radius: 26px; padding: 30px 22px; text-align: center; border: 1.5px solid rgba(255,255,255,0.2); box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 320px; }
-        .arabic-icon { font-size: 50px; margin-bottom: 12px; animation: bounce 1.2s infinite alternate; }
+        .arabic-icon { font-size: 48px; margin-bottom: 12px; }
         .arabic-title { font-size: 22px; font-weight: 800; color: #ffffff; margin-bottom: 6px; }
         .arabic-sub { font-size: 14px; color: #d7ccc8; line-height: 1.5; margin-bottom: 18px; }
         .btn-close-ar { background: #ffffff; color: #3b231d; font-weight: 800; border: none; padding: 10px 24px; border-radius: 12px; font-size: 14px; cursor: pointer; }
 
-        @keyframes popScale { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
 
-        /* Broadcast Notification Alert */
+        /* Broadcast Banner */
         #liveNotifBanner { background: #3b231d; color: white; padding: 14px 16px; border-radius: 16px; margin-bottom: 14px; display: none; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px rgba(59,35,29,0.2); }
 
         /* Loyalty Card */
@@ -44,6 +42,9 @@
         .qr-help { font-size: 12px; color: #d7ccc8; margin-top: 8px; font-weight: 600; }
 
         .staff-btn { background: none; border: none; color: #8d7b77; font-size: 12px; font-weight: 700; margin-top: 15px; cursor: pointer; text-align: center; }
+        
+        /* Clean Footer Info */
+        .footer-dev { text-align: center; font-size: 11px; color: #998a86; margin-top: 22px; font-weight: 600; cursor: pointer; line-height: 1.6; }
 
         /* Modals */
         .modal-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 1000; display: none; justify-content: center; align-items: flex-end; }
@@ -60,8 +61,25 @@
     <div class="arabic-card">
         <div class="arabic-icon">☕✨</div>
         <div class="arabic-title">Cup And Go</div>
-        <div class="arabic-sub" id="arModalSub">أهلاً بك في كب آند جو! تم تفعيل بطاقتك بنجاح. اجمع الأكواب واحصل على مشروبك المجاني! 🎁</div>
+        <div class="arabic-sub" id="arModalSub">أهلاً بك في Cup And Go! تم تفعيل بطاقتك بنجاح. اجمع الأكواب واحصل على مشروبك المجاني! 🎁</div>
         <button class="btn-close-ar" onclick="closeArBanner()">استمرار / Continue</button>
+    </div>
+</div>
+
+<!-- About / Developer Info Modal -->
+<div id="aboutModal" class="modal-screen" style="align-items: center;">
+    <div class="modal-body" style="border-radius: 26px; text-align: center;">
+        <div style="font-size: 38px; margin-bottom: 8px;">☕</div>
+        <h3 style="color: #3b231d; font-weight: 800; margin-bottom: 4px;">Cup And Go Loyalty System</h3>
+        <p style="font-size: 12px; color: #7d6b67; margin-bottom: 14px;">Version 2.5 • Smart Digital Pass</p>
+        
+        <div style="background: #faf7f6; padding: 14px; border-radius: 14px; font-size: 13px; color: #3b231d; border: 1px solid #eee; margin-bottom: 15px; text-align: center;">
+            <div style="font-size: 11px; color: #7d6b67; margin-bottom: 4px;">SYSTEM DEVELOPER</div>
+            <b>Mohammed Ashik</b>
+        </div>
+
+        <p style="font-size: 11px; color: #888; margin-bottom: 18px;">All Rights Reserved © 2026 Cup And Go</p>
+        <button class="btn-full btn-brown" onclick="document.getElementById('aboutModal').style.display='none'">إغلاق / Close</button>
     </div>
 </div>
 
@@ -95,7 +113,13 @@
         <p class="qr-help">أظهر هذا الرمز للكاشير في Cup And Go عند كل طلب</p>
     </div>
 
-    <button class="staff-btn" onclick="openStaffLogin()">⚙️ لوحة تحكم الموظف / المالك (Cup And Go)</button>
+    <button class="staff-btn" onclick="openStaffLogin()">⚙️ لوحة تحكم الموظف / المالك</button>
+
+    <!-- Footer Developer / Software Info -->
+    <div class="footer-dev" onclick="document.getElementById('aboutModal').style.display='flex'">
+        <div>Cup And Go © 2026 • All Rights Reserved</div>
+        <div style="font-size: 10px; opacity: 0.8;">Developed by <b>Mohammed Ashik</b></div>
+    </div>
 
     <!-- Scanner Modal -->
     <div class="modal-screen" id="modalScanner">
@@ -124,7 +148,7 @@
                 <h3 style="font-weight:800; color:#3b231d;">📢 إرسال رسالة للعملاء</h3>
                 <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
             </div>
-            <input type="text" id="msgTitle" placeholder="عنوان العرض (مثال: Cup And Go - خصم خاص!)">
+            <input type="text" id="msgTitle" placeholder="عنوان العرض (مثال: خصم خاص!)">
             <textarea id="msgBody" rows="3" placeholder="تفاصيل العرض"></textarea>
             <button class="btn-full btn-brown" onclick="sendBroadcast()">إرسال لجميع العملاء 🚀</button>
             <button class="btn-full" style="background:#dc2626; color:white; margin-top:8px;" onclick="clearBroadcast()">مسح الرسالة الحالية</button>
@@ -163,7 +187,7 @@
     const qrBox = document.getElementById("qrcode");
     new QRCode(qrBox, { text: customerId, width: 125, height: 125 });
 
-    // 3. Show Arabic Welcome on First Scan
+    // 3. Welcome Popup
     window.addEventListener("DOMContentLoaded", () => {
         if(isFirstTime) {
             document.getElementById("arModalSub").innerText = "أهلاً بك في Cup And Go! تم تفعيل بطاقتك بنجاح. اجمع الأكواب واحصل على مشروبك المجاني! 🎁";
