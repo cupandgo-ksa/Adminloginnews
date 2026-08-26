@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cup And Go - Loyalty</title>
+    <title>Cup And Go - Loyalty & Staff Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -12,10 +12,9 @@
     <style>
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; }
         body { background: #121212; color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
-        .app-wrapper { width: 100%; max-width: 380px; }
+        .app-wrapper { width: 100%; max-width: 400px; }
         
-        /* Customer Digital Card */
-        .pass-card { background: #3b231d; border-radius: 24px; padding: 25px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; border: 1px solid rgba(255,255,255,0.1); transition: background 0.3s; }
+        .pass-card { background: #3b231d; border-radius: 24px; padding: 25px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         .brand-name { font-size: 24px; font-weight: 800; color: #fff; }
         .brand-sub { font-size: 13px; color: #d7ccc8; margin-top: 4px; }
         
@@ -25,20 +24,23 @@
 
         .qr-box { background: white; padding: 12px; border-radius: 16px; display: inline-block; margin-bottom: 12px; }
         
-        /* Admin Panels */
-        .admin-panel { background: #222; border-radius: 24px; padding: 20px; text-align: center; display: none; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #444; background: #333; color: white; border-radius: 10px; font-size: 14px; margin-bottom: 10px; outline: none; }
+        .admin-panel { background: #1e1e1e; border-radius: 24px; padding: 20px; text-align: center; display: none; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #444; background: #2a2a2a; color: white; border-radius: 10px; font-size: 14px; margin-bottom: 10px; outline: none; }
         label { display: block; text-align: left; font-size: 12px; color: #bbb; margin-bottom: 4px; font-weight: 600; }
         
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px; }
         .btn-orange { background: #ff6b00; color: white; }
         .btn-gray { background: rgba(255,255,255,0.1); color: #aaa; font-size: 12px; }
+        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 8px; font-size: 12px; background: #333; color: #bbb; border: none; border-radius: 8px; cursor: pointer; }
+        .tab-btn.active { background: #ff6b00; color: white; font-weight: bold; }
+        .staff-item { display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div class="app-wrapper">
-    <!-- 1. Customer Card Screen -->
+    <!-- 1. Customer Digital Pass Screen -->
     <div class="pass-card" id="customerCard">
         <div class="brand-name" id="uiBrandName">Cup And Go</div>
         <div class="brand-sub" id="uiOfferText">Collect stamps & get free drinks! 🎁</div>
@@ -50,57 +52,65 @@
         </div>
         
         <p style="font-size: 12px; color: #a89f91; margin-bottom: 15px;">Show this QR code at the counter</p>
-        <button class="btn btn-gray" onclick="toggleAdmin()">⚙️ Cashier & Settings Mode</button>
+        <button class="btn btn-gray" onclick="openLoginModal()">⚙️ Staff / Owner Login</button>
     </div>
 
-    <!-- 2. Admin Hub (Scanner & Live Customizer) -->
+    <!-- 2. Staff / Owner Hub Screen -->
     <div class="admin-panel" id="adminScreen">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-            <button class="btn btn-orange" style="margin:0; padding:8px 15px; font-size:13px; width:48%;" onclick="showTab('scan')">📷 QR Scanner</button>
-            <button class="btn btn-gray" style="margin:0; padding:8px 15px; font-size:13px; width:48%;" onclick="showTab('settings')">🎨 Settings</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="text-align:left;">
+                <div style="font-size:11px; color:#888;">Logged as: <b id="lblRole" style="color:#ff6b00;"></b></div>
+                <div style="font-weight:700;" id="lblUser"></div>
+            </div>
+            <button class="btn btn-gray" style="margin:0; width:auto; padding:6px 12px;" onclick="logoutStaff()">Logout</button>
         </div>
 
-        <!-- Tab 1: Scanner -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" id="tabBtnScan" onclick="switchTab('scan')">📷 Scanner</button>
+            <button class="tab-btn" id="tabBtnStaff" onclick="switchTab('staff')">👥 Staff</button>
+            <button class="tab-btn" id="tabBtnSettings" onclick="switchTab('settings')">🎨 Settings</button>
+        </div>
+
+        <!-- Scanner Tab -->
         <div id="tabScan">
             <div id="reader" style="border-radius: 14px; overflow: hidden; margin-bottom: 15px;"></div>
-            
-            <div id="scanResult" style="display: none; background: #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align:left;">
-                <p style="font-size: 13px; color: #bbb;">Customer ID: <b id="lblCustId" style="color:white;"></b></p>
+            <div id="scanResult" style="display: none; background: #2a2a2a; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align:left;">
+                <p style="font-size: 13px; color: #bbb;">Customer: <b id="lblCustId" style="color:white;"></b></p>
                 <p style="font-size: 20px; font-weight: 800; color: #ff6b00; margin: 8px 0;">Stamps: <span id="lblStamps">0</span></p>
                 <button class="btn btn-orange" onclick="addStampToCustomer()">➕ Add +1 Stamp ☕</button>
-                <button class="btn" style="background:#dc2626; color:white;" onclick="resetCustomerStamps()">🎁 Redeem Free Cup (Reset)</button>
+                <button class="btn" style="background:#dc2626; color:white;" onclick="resetCustomerStamps()">🎁 Redeem Reward</button>
             </div>
         </div>
 
-        <!-- Tab 2: Customization Settings -->
+        <!-- Staff Management Tab (Owner Only) -->
+        <div id="tabStaff" style="display:none; text-align:left;">
+            <label>Add New Employee</label>
+            <input type="text" id="newStaffName" placeholder="Employee Name">
+            <input type="password" id="newStaffPin" placeholder="4-Digit PIN (e.g. 5566)">
+            <button class="btn btn-orange" onclick="addNewEmployee()">+ Add Employee</button>
+            
+            <label style="margin-top:15px;">Active Staff List</label>
+            <div id="staffListContainer">Loading employees...</div>
+        </div>
+
+        <!-- Store & Card Settings Tab (Owner Only) -->
         <div id="tabSettings" style="display:none; text-align:left;">
             <label>Brand / Shop Name</label>
-            <input type="text" id="cfgBrand" placeholder="e.g. Cup And Go">
+            <input type="text" id="cfgBrand" placeholder="Shop Name">
 
             <label>Offer Text</label>
-            <input type="text" id="cfgOffer" placeholder="e.g. Collect 7 cups & get 1 free!">
+            <input type="text" id="cfgOffer" placeholder="Offer text">
 
-            <label>Total Stamps (কত কাপে অফার)</label>
+            <label>Total Stamps Count</label>
             <select id="cfgSlots">
                 <option value="5">5 Stamps (4 Cups + 1 Free)</option>
-                <option value="6">6 Stamps (5 Cups + 1 Free)</option>
                 <option value="7">7 Stamps (6 Cups + 1 Free)</option>
                 <option value="8">8 Stamps (7 Cups + 1 Free)</option>
                 <option value="10">10 Stamps (9 Cups + 1 Free)</option>
             </select>
 
-            <label>Card Color</label>
-            <select id="cfgBg">
-                <option value="#3b231d">Dark Coffee</option>
-                <option value="#1e293b">Slate Dark Blue</option>
-                <option value="#0f172a">Pitch Black</option>
-                <option value="#ff6b00">Vibrant Orange</option>
-            </select>
-
-            <button class="btn btn-orange" onclick="saveCustomSettings()">Save & Update Live</button>
+            <button class="btn btn-orange" onclick="saveStoreSettings()">Save Changes</button>
         </div>
-
-        <button class="btn btn-gray" onclick="toggleAdmin()">Back to Customer Pass</button>
     </div>
 </div>
 
@@ -117,10 +127,12 @@
     const db = firebase.firestore();
 
     let totalSlots = 8;
-    let cardBg = "#3b231d";
+    let currentUserRole = ""; // owner or staff
+    let scannerObj = null;
+    let scannedId = "";
 
-    // 1. Live Configuration Sync
-    db.collection("settings").doc("card_config").onSnapshot((doc) => {
+    // 1. Live Sync Store Configurations
+    db.collection("settings").doc("store_config").onSnapshot((doc) => {
         if(doc.exists) {
             const data = doc.data();
             if(data.brandName) {
@@ -135,32 +147,26 @@
                 totalSlots = parseInt(data.totalSlots);
                 document.getElementById("cfgSlots").value = data.totalSlots;
             }
-            if(data.cardBg) {
-                cardBg = data.cardBg;
-                document.getElementById("customerCard").style.backgroundColor = cardBg;
-                document.getElementById("cfgBg").value = cardBg;
-            }
-            renderCustomerStamps();
+            renderCustomerCard();
         }
     });
 
-    // 2. Customer ID & Storage
-    let myCustomerId = localStorage.getItem("cup_customer_id");
-    if(!myCustomerId) {
-        myCustomerId = "CUP-" + Math.floor(100000 + Math.random() * 900000);
-        localStorage.setItem("cup_customer_id", myCustomerId);
-        db.collection("loyalty").doc(myCustomerId).set({ stamps: 0, visits: 1, createdAt: new Date() });
+    // 2. Customer Pass Auto Creation
+    let myCustId = localStorage.getItem("cup_customer_id");
+    if(!myCustId) {
+        myCustId = "CUP-" + Math.floor(100000 + Math.random() * 900000);
+        localStorage.setItem("cup_customer_id", myCustId);
+        db.collection("loyalty").doc(myCustId).set({ stamps: 0, visits: 1, createdAt: new Date() });
     }
-
-    new QRCode(document.getElementById("qrcode"), { text: myCustomerId, width: 130, height: 130 });
+    new QRCode(document.getElementById("qrcode"), { text: myCustId, width: 130, height: 130 });
 
     let myStamps = 0;
-    db.collection("loyalty").doc(myCustomerId).onSnapshot((doc) => {
+    db.collection("loyalty").doc(myCustId).onSnapshot((doc) => {
         myStamps = (doc.exists && doc.data().stamps) ? doc.data().stamps : 0;
-        renderCustomerStamps();
+        renderCustomerCard();
     });
 
-    function renderCustomerStamps() {
+    function renderCustomerCard() {
         const grid = document.getElementById("stampsContainer");
         grid.innerHTML = "";
         for(let i = 1; i <= totalSlots; i++) {
@@ -171,37 +177,80 @@
         }
     }
 
-    // 3. Admin & Navigation
-    let scannedId = "";
-    let scannerObj = null;
+    // 3. Multi-user Staff / Owner Authentication
+    function openLoginModal() {
+        const pin = prompt("Enter Owner or Staff PIN:");
+        if(!pin) return;
 
-    function toggleAdmin() {
-        const custCard = document.getElementById("customerCard");
-        const adminCard = document.getElementById("adminScreen");
-
-        if(adminCard.style.display === "none" || adminCard.style.display === "") {
-            const pin = prompt("Enter Cashier PIN (Default: 1234):");
-            if(pin === "1234") {
-                custCard.style.display = "none";
-                adminCard.style.display = "block";
-                showTab('scan');
+        // Check Owner Store Setup
+        db.collection("settings").doc("owner_account").get().then((doc) => {
+            if(!doc.exists) {
+                // First Time Setup for Store Owner
+                const shop = prompt("First Time Setup! Enter Store Name:");
+                const phone = prompt("Enter Store Mobile Number:");
+                db.collection("settings").doc("owner_account").set({ shopName: shop, phone: phone, pin: pin });
+                db.collection("settings").doc("store_config").set({ brandName: shop, offerText: "Collect stamps & get free drinks!", totalSlots: 8 });
+                loginSuccess("Owner", shop);
             } else {
-                alert("Incorrect PIN!");
+                const owner = doc.data();
+                if(owner.pin === pin) {
+                    loginSuccess("Owner", owner.shopName || "Owner");
+                } else {
+                    // Check Employees Collection
+                    db.collection("staff").doc(pin).get().then((sDoc) => {
+                        if(sDoc.exists) {
+                            loginSuccess("Staff", sDoc.data().name);
+                        } else {
+                            alert("Invalid PIN code!");
+                        }
+                    });
+                }
             }
+        });
+    }
+
+    function loginSuccess(role, name) {
+        currentUserRole = role;
+        document.getElementById("customerCard").style.display = "none";
+        document.getElementById("adminScreen").style.display = "block";
+        document.getElementById("lblRole").innerText = role;
+        document.getElementById("lblUser").innerText = name;
+
+        // Permissions control
+        if(role === "Staff") {
+            document.getElementById("tabBtnStaff").style.display = "none";
+            document.getElementById("tabBtnSettings").style.display = "none";
         } else {
-            adminCard.style.display = "none";
-            custCard.style.display = "block";
+            document.getElementById("tabBtnStaff").style.display = "block";
+            document.getElementById("tabBtnSettings").style.display = "block";
+            loadStaffList();
+        }
+        switchTab('scan');
+    }
+
+    function logoutStaff() {
+        document.getElementById("adminScreen").style.display = "none";
+        document.getElementById("customerCard").style.display = "block";
+        if(scannerObj) scannerObj.clear();
+    }
+
+    function switchTab(t) {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.getElementById("tabScan").style.display = t === 'scan' ? 'block' : 'none';
+        document.getElementById("tabStaff").style.display = t === 'staff' ? 'block' : 'none';
+        document.getElementById("tabSettings").style.display = t === 'settings' ? 'block' : 'none';
+
+        if(t === 'scan') {
+            document.getElementById("tabBtnScan").classList.add("active");
+            startScanner();
+        } else {
             if(scannerObj) scannerObj.clear();
+            if(t === 'staff') document.getElementById("tabBtnStaff").classList.add("active");
+            if(t === 'settings') document.getElementById("tabBtnSettings").classList.add("active");
         }
     }
 
-    function showTab(tab) {
-        document.getElementById("tabScan").style.display = tab === 'scan' ? 'block' : 'none';
-        document.getElementById("tabSettings").style.display = tab === 'settings' ? 'block' : 'none';
-        if(tab === 'scan') startScanner();
-        else if(scannerObj) scannerObj.clear();
-    }
-
+    // 4. Scanner Engine
     function startScanner() {
         if(!scannerObj) {
             scannerObj = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
@@ -236,7 +285,7 @@
             });
         }).then((newS) => {
             document.getElementById("lblStamps").innerText = newS;
-            alert("Stamp added! Customer's card updated live ☕");
+            alert("Stamp added! Customer pass updated ☕");
         });
     }
 
@@ -245,25 +294,53 @@
         if(confirm("Redeem free cup and reset to 0?")) {
             db.collection("loyalty").doc(scannedId).update({ stamps: 0 }).then(() => {
                 document.getElementById("lblStamps").innerText = 0;
-                alert("Reward Claimed! Pass reset to 0.");
+                alert("Reward Claimed!");
             });
         }
     }
 
-    function saveCustomSettings() {
-        const b = document.getElementById("cfgBrand").value.trim() || "Cup And Go";
-        const o = document.getElementById("cfgOffer").value.trim() || "Collect stamps & get free drinks!";
-        const s = document.getElementById("cfgSlots").value;
-        const bg = document.getElementById("cfgBg").value;
+    // 5. Staff Management (Unlimited)
+    function addNewEmployee() {
+        const name = document.getElementById("newStaffName").value.trim();
+        const pin = document.getElementById("newStaffPin").value.trim();
+        if(!name || !pin) return alert("Please enter staff name and 4-digit PIN");
 
-        db.collection("settings").doc("card_config").set({
-            brandName: b,
-            offerText: o,
-            totalSlots: s,
-            cardBg: bg
-        }).then(() => {
-            alert("Settings updated! All cards synced live.");
-            showTab('scan');
+        db.collection("staff").doc(pin).set({ name: name, pin: pin, createdAt: new Date() }).then(() => {
+            alert("Employee added successfully!");
+            document.getElementById("newStaffName").value = "";
+            document.getElementById("newStaffPin").value = "";
+            loadStaffList();
+        });
+    }
+
+    function loadStaffList() {
+        db.collection("staff").onSnapshot((snapshot) => {
+            let html = "";
+            snapshot.forEach((doc) => {
+                const s = doc.data();
+                html += `
+                    <div class="staff-item">
+                        <div><b>${s.name}</b> (PIN: ${s.pin})</div>
+                        <button onclick="deleteStaff('${s.pin}')" style="background:#dc2626; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">Delete</button>
+                    </div>
+                `;
+            });
+            document.getElementById("staffListContainer").innerHTML = html || "<p style='color:#777;'>No employees added yet.</p>";
+        });
+    }
+
+    function deleteStaff(pin) {
+        if(confirm("Remove this employee?")) {
+            db.collection("staff").doc(pin).delete();
+        }
+    }
+
+    function saveStoreSettings() {
+        const b = document.getElementById("cfgBrand").value.trim();
+        const o = document.getElementById("cfgOffer").value.trim();
+        const s = document.getElementById("cfgSlots").value;
+        db.collection("settings").doc("store_config").set({ brandName: b, offerText: o, totalSlots: s }).then(() => {
+            alert("Settings updated live!");
         });
     }
 </script>
