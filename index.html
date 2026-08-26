@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cup And Go - Loyalty Management</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <title>Cup And Go - Digital Loyalty Card</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
@@ -13,104 +12,92 @@
     <style>
         :root {
             --primary: #f97316;
-            --primary-dark: #ea580c;
             --coffee: #3b231d;
-            --coffee-light: #52342c;
-            --bg-light: #f8fafc;
-            --card-border: #f1f5f9;
         }
         * { box-sizing: border-box; font-family: 'Tajawal', 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background: #0f172a; color: #1e293b; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-        .app-wrapper { width: 100%; max-width: 420px; background: #ffffff; min-height: 100vh; display: flex; flex-direction: column; position: relative; overflow-x: hidden; }
+        body { background: #f1f5f9; color: #1e293b; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 10px; }
+        .app-wrapper { width: 100%; max-width: 420px; background: #ffffff; min-height: 95vh; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        /* Screens */
         .screen { display: none; padding: 20px; flex: 1; flex-direction: column; }
         .screen.active { display: flex; }
 
-        /* Niqati Style Customer Card View */
-        .customer-card-box { background: var(--coffee); color: white; border-radius: 28px; padding: 26px 20px; box-shadow: 0 20px 40px rgba(59,35,29,0.3); text-align: center; }
-        .brand-logo-txt { font-size: 28px; font-weight: 800; letter-spacing: 0.5px; }
+        /* Customer Loyalty Card View */
+        .customer-card-box { background: var(--coffee); color: white; border-radius: 26px; padding: 24px 18px; box-shadow: 0 16px 36px rgba(59,35,29,0.3); text-align: center; }
+        .brand-logo-txt { font-size: 26px; font-weight: 800; letter-spacing: 0.5px; }
         .brand-sub { font-size: 13px; color: #d7ccc8; margin-top: 4px; }
-        .stamps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 22px 0 16px; }
-        .stamp-slot { aspect-ratio: 1; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; background: rgba(255,255,255,0.08); border: 1.5px dashed rgba(255,255,255,0.25); color: rgba(255,255,255,0.3); }
-        .stamp-slot.active { background: white; border: 1.5px solid white; color: var(--coffee); box-shadow: 0 8px 20px rgba(0,0,0,0.25); transform: scale(1.04); }
-        .qr-wrapper { background: white; padding: 12px; border-radius: 20px; display: inline-block; margin-top: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        
+        .stamps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0 16px; }
+        .stamp-slot { aspect-ratio: 1; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; background: rgba(255,255,255,0.08); border: 1.5px dashed rgba(255,255,255,0.35); color: rgba(255,255,255,0.5); }
+        .stamp-slot.active { background: #ffffff; border: 1.5px solid #ffffff; color: var(--coffee); box-shadow: 0 6px 16px rgba(0,0,0,0.3); transform: scale(1.05); }
+        
+        .qr-wrapper { background: #ffffff; padding: 12px; border-radius: 18px; display: inline-block; margin-top: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+        .qr-wrapper img { width: 140px; height: 140px; display: block; border-radius: 8px; }
 
-        /* Niqati Style Auth Screen */
-        .auth-header { background: linear-gradient(135deg, #fb923c, #ea580c); padding: 50px 20px 35px; text-align: center; color: white; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; position: relative; }
-        .auth-header .logo-badge { width: 68px; height: 68px; background: white; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 12px 24px rgba(0,0,0,0.15); margin-bottom: 12px; }
+        /* Niqati Sign In Screen */
+        .auth-header { background: linear-gradient(135deg, #fb923c, #ea580c); padding: 40px 20px 30px; text-align: center; color: white; border-bottom-left-radius: 32px; border-bottom-right-radius: 32px; }
+        .auth-header .logo-badge { width: 64px; height: 64px; background: white; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); margin-bottom: 10px; }
         .auth-sheet { padding: 25px 20px; flex: 1; }
-        .input-group { margin-bottom: 16px; text-align: right; }
-        .input-group label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
-        .input-field { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 14px; outline: none; transition: 0.2s; }
+        .input-group { margin-bottom: 14px; text-align: right; }
+        .input-group label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 5px; }
+        .input-field { width: 100%; padding: 13px 15px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 14px; outline: none; }
         .input-field:focus { border-color: var(--primary); background: white; }
-        .btn-primary { width: 100%; padding: 15px; border-radius: 14px; border: none; background: var(--primary); color: white; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 20px rgba(249,115,22,0.35); transition: 0.2s; }
-        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: white; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 18px rgba(249,115,22,0.35); }
 
-        /* Admin / Owner Dashboard */
-        .admin-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
-        .join-code-card { background: linear-gradient(135deg, #3b82f6, #6366f1); border-radius: 24px; padding: 22px; color: white; margin-bottom: 20px; box-shadow: 0 12px 28px rgba(59,130,246,0.25); }
-        .join-code-box { background: rgba(255,255,255,0.18); border-radius: 16px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-weight: 800; letter-spacing: 1px; font-size: 18px; }
-
-        /* Niqati Menu Cards */
-        .menu-card { background: white; border: 1.5px solid #f1f5f9; border-radius: 20px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
-        .menu-card:active { background: #f8fafc; transform: scale(0.99); }
-        .menu-icon-box { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; }
-
-        /* Bottom Nav Bar */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 420px; background: white; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-around; padding: 10px 0 12px; z-index: 100; box-shadow: 0 -4px 16px rgba(0,0,0,0.03); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 700; color: #94a3b8; cursor: pointer; border: none; background: none; }
-        .nav-item.active { color: var(--primary); }
-        .nav-scan-btn { width: 48px; height: 48px; border-radius: 16px; background: linear-gradient(135deg, #fb923c, #ea580c); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 8px 18px rgba(234,88,12,0.35); border: none; cursor: pointer; }
+        /* Admin Components */
+        .join-code-card { background: linear-gradient(135deg, #3b82f6, #6366f1); border-radius: 22px; padding: 20px; color: white; margin-bottom: 18px; box-shadow: 0 10px 24px rgba(59,130,246,0.25); }
+        .join-code-box { background: rgba(255,255,255,0.2); border-radius: 14px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-weight: 800; font-size: 17px; }
+        .menu-card { background: white; border: 1.5px solid #f1f5f9; border-radius: 18px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .menu-icon-box { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
 
         /* Modals */
         .modal-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2000; display: none; justify-content: center; align-items: flex-end; }
-        .modal-body { width: 100%; max-width: 420px; background: white; border-top-left-radius: 28px; border-top-right-radius: 28px; padding: 25px 20px 35px; max-height: 85vh; overflow-y: auto; text-align: right; }
+        .modal-body { width: 100%; max-width: 420px; background: white; border-top-left-radius: 26px; border-top-right-radius: 26px; padding: 25px 20px 30px; max-height: 85vh; overflow-y: auto; text-align: right; }
     </style>
 </head>
 <body>
 
 <div class="app-wrapper">
 
-    <!-- 1. Customer View (Auto Registration via QR) -->
-    <div id="screenCustomer" class="screen active" style="padding-bottom: 40px;">
+    <!-- 1. Customer Card Screen -->
+    <div id="screenCustomer" class="screen active">
         <div class="customer-card-box">
             <div style="font-size: 34px; margin-bottom: 4px;">☕</div>
             <div class="brand-logo-txt">Cup And Go</div>
             <p class="brand-sub">كب آند جو • اجمع الأكواب واحصل على مشروبك المجاني 🎁</p>
 
-            <div style="font-size: 13px; color: #f5ebe6; margin-top: 14px; font-weight: 700;">
+            <div style="font-size: 13px; color: #f5ebe6; margin-top: 12px; font-weight: 700;">
                 الأكواب المكتملة: <b id="lblCollectedCount" style="color:#ffffff;">0</b> / 8
             </div>
 
-            <!-- 8 Stamps Grid -->
+            <!-- Stamps Grid -->
             <div class="stamps-grid" id="stampsContainer"></div>
 
+            <!-- Customer QR Image -->
             <div class="qr-wrapper">
-                <div id="customerQr"></div>
+                <img id="customerQrImg" src="" alt="Customer QR">
             </div>
-            <p style="font-size: 12px; color: #d7ccc8; margin-top: 10px; font-weight: 600;">أظهر هذا الرمز للكاشير عند كل طلب</p>
+            <p style="font-size: 12px; color: #d7ccc8; margin-top: 8px; font-weight: 600;">أظهر هذا الرمز للكاشير عند كل طلب</p>
         </div>
 
-        <div style="margin-top: 25px; text-align: center;">
-            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;" id="custInfoLbl">تعديل بيانات البطاقة</p>
-            <button onclick="openCustomerRegModal()" style="background: #f1f5f9; border: none; padding: 10px 18px; border-radius: 12px; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer;">📝 تحديث الاسم ورقم الجوال</button>
+        <div style="margin-top: 20px; text-align: center;">
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 10px;" id="custInfoLbl">تعديل بيانات البطاقة</p>
+            <button onclick="openCustomerRegModal()" style="background: #f1f5f9; border: none; padding: 9px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer;">📝 تحديث الاسم ورقم الجوال</button>
             <br>
-            <button onclick="navigateTo('screenSignIn')" style="background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 800; margin-top: 20px; cursor: pointer;">🔐 بوابة الموظفين والملاك (Sign In)</button>
+            <button onclick="navigateTo('screenSignIn')" style="background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 800; margin-top: 18px; cursor: pointer;">🔐 بوابة الموظفين والملاك (Sign In)</button>
         </div>
     </div>
 
-    <!-- 2. Niqati Style Owner Sign In Screen -->
+    <!-- 2. Niqati Style Owner / Staff Sign In Screen -->
     <div id="screenSignIn" class="screen" style="padding: 0;">
         <div class="auth-header">
             <div class="logo-badge">🏷️</div>
-            <h2 style="font-weight: 800; font-size: 24px;">Sign in</h2>
-            <p style="font-size: 13px; opacity: 0.9; margin-top: 4px;">لوحة تحكم كب آند جو (Cup And Go)</p>
+            <h2 style="font-weight: 800; font-size: 22px;">Sign in</h2>
+            <p style="font-size: 12px; opacity: 0.9; margin-top: 4px;">لوحة تحكم كب آند جو (Cup And Go)</p>
         </div>
         <div class="auth-sheet">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="font-size: 20px; font-weight: 800;">تسجيل الدخول</h3>
-                <button onclick="toggleSignUpMode()" id="btnSwitchAuth" style="background: #fff7ed; border: none; color: var(--primary); font-weight: 800; padding: 6px 14px; border-radius: 10px; font-size: 12px; cursor: pointer;">Create account</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 18px; font-weight: 800;" id="authHeaderTitle">تسجيل الدخول</h3>
+                <button onclick="toggleSignUpMode()" id="btnSwitchAuth" style="background: #fff7ed; border: none; color: var(--primary); font-weight: 800; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">Create account</button>
             </div>
 
             <div id="signUpFields" style="display: none;">
@@ -136,118 +123,87 @@
 
             <button class="btn-primary" id="authActionBtn" onclick="handleOwnerAuth()">Log in</button>
 
-            <div style="text-align: center; margin-top: 25px;">
-                <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">By continuing you agree to Terms & Conditions</p>
-                <button onclick="openJoinBusinessModal()" style="background: none; border: none; color: var(--primary); font-size: 14px; font-weight: 800; cursor: pointer; text-decoration: underline;">Join a business (دخول الكاشير بكود)</button>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="openJoinBusinessModal()" style="background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: underline;">Join a business (دخول الكاشير بكود)</button>
                 <br>
-                <button onclick="navigateTo('screenCustomer')" style="background: none; border: none; color: #64748b; font-size: 12px; font-weight: 700; margin-top: 15px; cursor: pointer;">← العودة لبطاقة العميل</button>
+                <button onclick="navigateTo('screenCustomer')" style="background: none; border: none; color: #64748b; font-size: 12px; font-weight: 700; margin-top: 14px; cursor: pointer;">← العودة لبطاقة العميل</button>
             </div>
         </div>
     </div>
 
-    <!-- 3. Owner Main Dashboard (Admin) -->
-    <div id="screenAdmin" class="screen" style="padding-bottom: 80px;">
-        <div class="admin-header">
+    <!-- 3. Owner Admin Dashboard -->
+    <div id="screenAdmin" class="screen" style="padding-bottom: 30px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
             <div>
-                <h3 style="font-weight: 800; font-size: 18px; color: #0f172a;">Manage business</h3>
-                <p style="font-size: 12px; color: #64748b;">Cup And Go • لوحة الإدارة</p>
+                <h3 style="font-weight: 800; font-size: 17px;">Manage business</h3>
+                <p style="font-size: 11px; color: #64748b;">Cup And Go • لوحة الإدارة</p>
             </div>
-            <button onclick="auth.signOut(); navigateTo('screenSignIn');" style="background: #fee2e2; border: none; color: #dc2626; font-size: 11px; font-weight: 800; padding: 6px 12px; border-radius: 8px; cursor: pointer;">خروج</button>
+            <button onclick="auth.signOut(); navigateTo('screenSignIn');" style="background: #fee2e2; border: none; color: #dc2626; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 8px; cursor: pointer;">خروج</button>
         </div>
 
         <!-- Join Code Niqati Card -->
         <div class="join-code-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h4 style="font-size: 16px; font-weight: 800;">Join code</h4>
+                    <h4 style="font-size: 15px; font-weight: 800;">Join code</h4>
                     <p style="font-size: 11px; opacity: 0.9;" id="lblCodeStatus">Enabled – employees can join</p>
                 </div>
-                <button onclick="toggleCodeStatus()" id="btnSuspendCode" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer;">Suspend</button>
+                <button onclick="toggleCodeStatus()" id="btnSuspendCode" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 5px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer;">Suspend</button>
             </div>
             <div class="join-code-box">
                 <span id="displayJoinCode">NQT-7JKYV5</span>
-                <button onclick="regenerateCode()" style="background: none; border: none; color: white; font-size: 12px; font-weight: 700; cursor: pointer;">🔄 كود جديد</button>
+                <button onclick="regenerateCode()" style="background: none; border: none; color: white; font-size: 11px; font-weight: 700; cursor: pointer;">🔄 كود جديد</button>
             </div>
         </div>
 
-        <!-- Analytics Overview -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; text-align: center;">
+        <!-- Analytics -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px; text-align: center;">
                 <div style="font-size: 10px; color: #64748b; font-weight: 700;">العملاء</div>
-                <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 4px;" id="statCust">0</div>
+                <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 2px;" id="statCust">0</div>
             </div>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; text-align: center;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px; text-align: center;">
                 <div style="font-size: 10px; color: #64748b; font-weight: 700;">الأكواب</div>
-                <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 4px;" id="statCups">0</div>
+                <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 2px;" id="statCups">0</div>
             </div>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; text-align: center;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px; text-align: center;">
                 <div style="font-size: 10px; color: #64748b; font-weight: 700;">الهدايا</div>
-                <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 4px;" id="statRedeemed">0</div>
-            </div>
-        </div>
-
-        <!-- Niqati Management Cards -->
-        <div class="menu-card">
-            <div class="menu-icon-box" style="background: #22c55e;">✓</div>
-            <div style="flex: 1; text-align: right;">
-                <div style="font-weight: 800; font-size: 14px;">Card design request</div>
-                <div style="font-size: 12px; color: #22c55e; font-weight: 700;">Cup And Go • Completed</div>
+                <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 2px;" id="statRedeemed">0</div>
             </div>
         </div>
 
         <div class="menu-card" onclick="openScannerModal()">
             <div class="menu-icon-box" style="background: #8b5cf6;">📷</div>
             <div style="flex: 1; text-align: right;">
-                <div style="font-weight: 800; font-size: 14px;">ماسح الكاشير (Scanner)</div>
-                <div style="font-size: 12px; color: #64748b;">مسح بطاقات العملاء وإضافة الأكواب</div>
+                <div style="font-weight: 800; font-size: 13px;">ماسح الكاشير (Scanner)</div>
+                <div style="font-size: 11px; color: #64748b;">مسح بطاقات العملاء وإضافة الأكواب</div>
             </div>
         </div>
 
         <div class="menu-card" onclick="openBroadcastModal()">
             <div class="menu-icon-box" style="background: #3b82f6;">📢</div>
             <div style="flex: 1; text-align: right;">
-                <div style="font-weight: 800; font-size: 14px;">إرسال عرض ترويجي (Broadcast)</div>
-                <div style="font-size: 12px; color: #64748b;">إرسال إشعار مباشر لجميع العملاء</div>
+                <div style="font-weight: 800; font-size: 13px;">إرسال عرض ترويجي (Broadcast)</div>
+                <div style="font-size: 11px; color: #64748b;">إرسال إشعار مباشر لجميع العملاء</div>
             </div>
         </div>
-    </div>
 
-    <!-- Bottom Navigation Bar for Admin/Staff -->
-    <div class="bottom-nav" id="adminBottomNav" style="display: none;">
-        <button class="nav-item active" onclick="navigateTo('screenAdmin')">
-            <span style="font-size: 18px;">🏠</span>
-            <span>Home</span>
-        </button>
-        <button class="nav-item" onclick="navigateTo('screenAdmin')">
-            <span style="font-size: 18px;">📊</span>
-            <span>Analytics</span>
-        </button>
-        <button class="nav-scan-btn" onclick="openScannerModal()">📷</button>
-        <button class="nav-item" onclick="navigateTo('screenCustomer')">
-            <span style="font-size: 18px;">👥</span>
-            <span>Card</span>
-        </button>
-        <button class="nav-item" onclick="navigateTo('screenAdmin')">
-            <span style="font-size: 18px;">🛡️</span>
-            <span>Admin</span>
-        </button>
+        <button onclick="navigateTo('screenCustomer')" style="background: #f1f5f9; border: none; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; color: #475569; width: 100%; margin-top: 10px; cursor: pointer;">← فتح بطاقة العميل</button>
     </div>
 
     <!-- Modals -->
-    <!-- 1. Join Business (Cashier PIN) Modal -->
     <div class="modal-screen" id="modalJoinBusiness">
         <div class="modal-body">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <h3 style="font-weight:800;">🔑 Join a business</h3>
                 <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
             </div>
-            <p style="font-size:12px; color:#64748b; margin-bottom:14px;">أدخل كود الانضمام الممنوح لك من إدارة Cup And Go:</p>
-            <input type="text" id="inputJoinCode" class="input-field" placeholder="NQT-XXXXXX" style="text-transform:uppercase; font-weight:800; text-align:center; font-size:18px; letter-spacing:2px; margin-bottom:14px;">
+            <p style="font-size:12px; color:#64748b; margin-bottom:12px;">أدخل كود الانضمام الممنوح لك من الإدارة:</p>
+            <input type="text" id="inputJoinCode" class="input-field" placeholder="NQT-XXXXXX" style="text-transform:uppercase; font-weight:800; text-align:center; font-size:17px; margin-bottom:12px;">
             <button class="btn-primary" onclick="verifyJoinCode()">دخول الكاشير والماسح 🚀</button>
         </div>
     </div>
 
-    <!-- 2. Customer Profile Update Modal -->
     <div class="modal-screen" id="modalCustomerReg">
         <div class="modal-body">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -266,18 +222,17 @@
         </div>
     </div>
 
-    <!-- 3. Scanner Modal -->
     <div class="modal-screen" id="modalScanner">
         <div class="modal-body">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <h3 style="font-weight:800;">📷 ماسح الكاشير</h3>
                 <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
             </div>
-            <div id="reader" style="border-radius:16px; overflow:hidden; margin-bottom:12px;"></div>
-            <div id="scanResultBox" style="display:none; background:#f8fafc; padding:15px; border-radius:16px; border:1px solid #e2e8f0;">
+            <div id="reader" style="border-radius:14px; overflow:hidden; margin-bottom:12px;"></div>
+            <div id="scanResultBox" style="display:none; background:#f8fafc; padding:14px; border-radius:14px; border:1px solid #e2e8f0;">
                 <p style="font-size:12px; color:#64748b;">العميل: <b id="resCustName" style="color:#0f172a;"></b></p>
-                <p style="font-size:22px; font-weight:800; color:#0f172a; margin:4px 0;">الأكواب: <span id="resStamps">0</span> / 8</p>
-                <div style="display:flex; gap:8px; margin-top:10px;">
+                <p style="font-size:20px; font-weight:800; color:#0f172a; margin:4px 0;">الأكواب: <span id="resStamps">0</span> / 8</p>
+                <div style="display:flex; gap:8px; margin-top:8px;">
                     <button class="btn-primary" style="background:#22c55e;" onclick="addCupToCustomer()">➕ إضافة كوب ☕</button>
                     <button class="btn-primary" style="background:#ef4444;" onclick="redeemReward()">🎁 استبدال المكافأة</button>
                 </div>
@@ -285,12 +240,84 @@
         </div>
     </div>
 
-    <!-- 4. Broadcast Modal -->
     <div class="modal-screen" id="modalBroadcast">
         <div class="modal-body">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <h3 style="font-weight:800;">📢 إرسال عرض للعملاء</h3>
                 <button onclick="closeModals()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
             </div>
-            <input type="text" id="msgTitle" class="input-field" placeholder="عنوان العرض (مثال: خصم اليوم!)" style="margin-bottom:10px;">
-            <textarea id="msgBody" class="input-field" rows="3" placeholder="تفاصيل العرض للعملاء..." style="margin-bottom:12px;"></t
+            <input type="text" id="msgTitle" class="input-field" placeholder="عنوان العرض" style="margin-bottom:8px;">
+            <textarea id="msgBody" class="input-field" rows="3" placeholder="تفاصيل العرض للعملاء..." style="margin-bottom:10px;"></textarea>
+            <button class="btn-primary" onclick="sendBroadcast()">إرسال فوري 🚀</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDI8tfzkWABqaAB9e0KGPj0",
+        authDomain: "cup-and-go-53e2d.firebaseapp.com",
+        projectId: "cup-and-go-53e2d",
+        storageBucket: "cup-and-go-53e2d.firebasestorage.app",
+        messagingSenderId: "555868986103",
+        appId: "1:555868986103:web:3a89b804a7"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let totalSlots = 8;
+    let cupIcon = "☕";
+    let isSignUp = false;
+    let activeJoinCode = "NQT-7JKYV5";
+    let isCodeActive = true;
+    let scannerObj = null;
+    let scannedPhone = "";
+
+    function navigateTo(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // Customer Setup
+    let customerPhone = localStorage.getItem("cup_cust_phone");
+    if(!customerPhone) {
+        customerPhone = "CUP-" + Math.floor(100000 + Math.random() * 900000);
+        localStorage.setItem("cup_cust_phone", customerPhone);
+    }
+
+    // Reliable Instant QR Code Generation
+    document.getElementById("customerQrImg").src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(customerPhone);
+
+    db.collection("loyalty").doc(customerPhone).onSnapshot(doc => {
+        let stamps = 0;
+        if(doc.exists) {
+            const d = doc.data();
+            stamps = d.stamps || 0;
+            if(d.name) document.getElementById("custInfoLbl").innerText = `البطاقة مسجلة باسم: ${d.name}`;
+        } else {
+            db.collection("loyalty").doc(customerPhone).set({ stamps: 0, redeemed: 0, createdAt: new Date() });
+        }
+        document.getElementById("lblCollectedCount").innerText = stamps;
+        renderStamps(stamps);
+    });
+
+    function renderStamps(stamps) {
+        const grid = document.getElementById("stampsContainer");
+        grid.innerHTML = "";
+        for(let i = 1; i <= totalSlots; i++) {
+            const slot = document.createElement("div");
+            const isTaken = i <= stamps;
+            slot.className = "stamp-slot" + (isTaken ? " active" : "");
+            slot.innerHTML = isTaken ? cupIcon : (i === totalSlots ? "🎁" : i);
+            grid.appendChild(slot);
+        }
+    }
+
+    function openCustomerRegModal() {
+        document.getElementById("modalCustomerReg").style.display = "flex";
+    }
+
+    function saveCustomerProfile() {
+        const name = document.getElementById("custRegName").value.tri
