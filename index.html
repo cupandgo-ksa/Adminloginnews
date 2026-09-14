@@ -700,17 +700,83 @@ transition:.22s ease}
   .loginTop{gap:8px!important}.loginTop>div:last-child{gap:6px!important}
 }
 </style>
+
+<style id="v23-simple-admin-login-transition">
+/* v23 — simpler grouped navigation + polished login transition */
+.navSimple{gap:7px}.navGroup{border:1px solid rgba(255,255,255,.09);border-radius:13px;overflow:hidden}
+.navGroup summary{list-style:none;cursor:pointer;padding:13px 14px;font-weight:800;color:#d7e3ec;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.navGroup summary::-webkit-details-marker{display:none}.navGroup summary span{transition:transform .2s}.navGroup[open] summary span{transform:rotate(180deg)}
+.navSub{display:grid;gap:3px;padding:0 7px 7px}.navSub button{padding:10px 12px!important;font-size:14px!important;background:rgba(255,255,255,.035)!important}
+.navSub button.active{background:rgba(255,255,255,.14)!important}.navPrimary{font-size:16px!important}.navTrash{margin-top:2px;color:#ffc6cc!important}
+.loginCard{transition:opacity .38s ease,transform .38s cubic-bezier(.2,.8,.2,1),filter .38s ease}
+.loginShell.loginSuccess .loginCard{opacity:0;transform:scale(.965) translateY(-10px);filter:blur(4px);pointer-events:none}
+.loginSubmit{position:relative;transition:transform .2s ease,opacity .2s ease}.loginSubmit:disabled{opacity:.88;cursor:wait}
+.loginSubmit.loginBusy:before{content:"";display:inline-block;width:16px;height:16px;margin-right:9px;vertical-align:-3px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:adminLoginSpin .7s linear infinite}
+.loginSubmit.loginOk{background:linear-gradient(100deg,#168f56,#0d7746)!important}
+@keyframes adminLoginSpin{to{transform:rotate(360deg)}}
+
+/* v24 — smooth controls, menu live-site shortcut, universal bottom feedback */
+.navLiveSite{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff!important;padding:13px 14px;border-radius:12px;font-weight:800;font-size:16px;background:linear-gradient(100deg,rgba(22,143,86,.26),rgba(255,255,255,.06));border:1px solid rgba(89,220,151,.20);transition:transform .18s ease,background .18s ease,box-shadow .18s ease}
+.navLiveSite:hover{background:rgba(22,143,86,.34);transform:translateY(-1px)}
+button,.btn,.iconbtn,.filePick,.actionText,.navLiveSite{transition:transform .16s ease,box-shadow .18s ease,opacity .18s ease,background-color .18s ease,border-color .18s ease!important;-webkit-tap-highlight-color:transparent}
+button:active,.btn:active,.iconbtn:active,.filePick:active,.actionText:active,.navLiveSite:active{transform:scale(.975)}
+button:disabled,.btn:disabled{opacity:.64!important;cursor:wait!important}
+.panel,.settingsCard,.adSlotCard,.categoryItem,.modalCard{transition:box-shadow .22s ease,transform .22s ease}
+#saveFeedbackToast{display:flex!important;align-items:center;justify-content:center;gap:9px;position:fixed;left:50%;bottom:max(22px,env(safe-area-inset-bottom));transform:translate(-50%,24px);z-index:999999;min-width:min(88vw,300px);max-width:calc(100vw - 28px);padding:13px 17px;border-radius:16px;text-align:center;font-family:"Hind Siliguri","Noto Sans Bengali",sans-serif;font-size:15px;font-weight:700;color:#fff;background:rgba(7,31,54,.94);border:1px solid rgba(255,255,255,.14);box-shadow:0 16px 42px rgba(0,0,0,.30);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease,transform .22s cubic-bezier(.2,.8,.2,1),visibility .22s}
+#saveFeedbackToast:before{content:"●";font-size:11px;color:#7dd3fc}
+#saveFeedbackToast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
+@media(max-width:620px){.navLiveSite{min-height:48px}.navSimple{padding-bottom:8px}#saveFeedbackToast{bottom:max(18px,env(safe-area-inset-bottom));font-size:14px}}
+
+@media(max-width:980px){.navGroup summary{min-height:46px}.navSub button{min-height:42px}}
+</style>
+
+<style id="v25-professional-entry">
+/* v25 — clean admin intro + guaranteed centered dashboard entry */
+#adminIntro .adminIntroCard p{font-size:16px!important;font-weight:700!important}
+#adminIntro .introKicker{font-size:12px!important;letter-spacing:.2px!important}
+#adminEntryGate{position:fixed;inset:0;z-index:490;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(150deg,#020a12,#071f36 52%,#0b3558);opacity:1;visibility:visible;transition:opacity .42s ease,visibility .42s ease}
+#adminEntryGate.hideGate{opacity:0;visibility:hidden;pointer-events:none}
+.adminEntryCard{width:min(330px,86vw);padding:28px 22px;text-align:center;border:1px solid rgba(255,255,255,.15);border-radius:24px;background:rgba(255,255,255,.08);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 24px 70px rgba(0,0,0,.28);color:#fff;transform:scale(.96);animation:entryPop .35s ease forwards}
+.adminEntrySpinner{width:42px;height:42px;margin:0 auto 16px;border:3px solid rgba(255,255,255,.22);border-top-color:#fff;border-radius:50%;animation:entrySpin .75s linear infinite}
+.adminEntryCard b{display:block;font-size:20px;margin-bottom:5px}.adminEntryCard small{color:#c8d8e4;font-size:13px}
+@keyframes entrySpin{to{transform:rotate(360deg)}}@keyframes entryPop{to{transform:scale(1)}}
+</style>
+
+<style id="v26-facebook-smooth-intro">
+/* v26: clean logo intro, Facebook-like dots, smooth screen transitions */
+#adminIntro.v26Intro{position:fixed!important;inset:0!important;z-index:999999!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:24px!important;background:linear-gradient(155deg,#020b13 0%,#071f36 56%,#0a3558 100%)!important;opacity:1;visibility:visible;transition:opacity .48s ease,visibility .48s ease!important}
+#adminIntro.v26Intro.hideIntro{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+.v26IntroInner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transform:translateY(-2vh);animation:v26IntroIn .52s cubic-bezier(.2,.8,.2,1) both}
+.v26IntroLogo{width:120px;height:120px;max-width:32vw;max-height:32vw;object-fit:contain;filter:drop-shadow(0 14px 30px rgba(0,0,0,.28))}
+.v26Dots{height:18px;display:flex;align-items:center;justify-content:center;gap:8px}
+.v26Dots i{display:block;width:8px;height:8px;border-radius:50%;background:#fff;opacity:.28;animation:v26Dot 1.05s ease-in-out infinite}
+.v26Dots i:nth-child(2){animation-delay:.16s}.v26Dots i:nth-child(3){animation-delay:.32s}
+@keyframes v26Dot{0%,60%,100%{transform:translateY(0) scale(.86);opacity:.28}30%{transform:translateY(-6px) scale(1.12);opacity:1}}
+@keyframes v26IntroIn{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:translateY(-2vh) scale(1)}}
+#loginView,#appView{transition:opacity .42s ease,transform .42s cubic-bezier(.2,.8,.2,1)}
+#loginView:not(.hide),#appView:not(.hide){animation:v26ScreenIn .46s cubic-bezier(.2,.8,.2,1) both}
+@keyframes v26ScreenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* keep language control inside the header; never overlap the login button */
+#loginView .langSwitch{position:static!important;inset:auto!important;margin:0!important}
+@media(max-width:620px){.v26IntroLogo{width:112px;height:112px;max-width:34vw;max-height:34vw}.v26IntroInner{gap:18px}.loginTop>div:last-child{align-self:center!important}}
+</style>
+
+<style id="v26-2-dots-only-intro">
+/* v26.2 — requested dots-only startup intro */
+.v26IntroInner{gap:0!important;transform:none!important;animation:v26DotsIntroIn .42s ease both!important}
+.v26Dots{height:28px!important;gap:10px!important}
+.v26Dots i{width:9px!important;height:9px!important}
+@keyframes v26DotsIntroIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+</style>
 </head>
 <body>
-<div id="adminIntro" class="adminIntro">
-  <div class="adminIntroCard">
-    
-    <h1 id="adminIntroName"><span class="introMain">হাইমচর নিউজ</span><span class="brandAccent">24BD</span></h1>
-    <p>বিশ্বস্ত সংবাদ, আপনার পাশে</p>
-    <div class="introKicker">বাংলাদেশ • স্থানীয় • জাতীয় • আন্তর্জাতিক</div>
+<div id="adminIntro" class="adminIntro v26Intro" aria-label="Admin loading">
+  <div class="v26IntroInner">
+    <div class="v26Dots" aria-hidden="true"><i></i><i></i><i></i></div>
   </div>
 </div>
 <div id="loadingBar" class="loadingBar"></div>
+<div id="adminEntryGate" class="hideGate" aria-live="polite"><div class="adminEntryCard"><div class="adminEntrySpinner"></div><b id="adminEntryTitle">ড্যাশবোর্ড প্রস্তুত হচ্ছে</b><small id="adminEntrySub">অ্যাডমিন প্যানেল খোলা হচ্ছে…</small></div></div>
 
 <section id="loginView" class="loginShell">
   <form id="loginForm" class="loginCard" novalidate>
@@ -735,7 +801,7 @@ transition:.22s ease}
     <p class="muted" data-i18n="loginSub">সংবাদ প্রকাশ ও ওয়েবসাইট পরিচালনা করতে লগইন করুন</p>
 
     <label class="field">
-      <span data-i18n="email">Admin ইমেইল</span>
+      <span data-i18n="email">ইমেইল</span>
       <input id="emailInput" type="email" autocomplete="username" required>
     </label>
 
@@ -758,22 +824,31 @@ transition:.22s ease}
       <img id="sideLogo" class="sideLogo hide" alt="Logo">
       <div><b id="sideSiteName">হাইমচর নিউজ24BD</b><small>ADMIN PANEL</small></div>
     </div>
-    <nav class="nav">
-      <button data-page="dashboard" class="active">ড্যাশবোর্ড</button>
-      <button data-page="news">সকল সংবাদ</button>
-      <button data-page="breaking">ব্রেকিং নিউজ</button>
-      <button data-page="categories">ক্যাটাগরি</button>
-      <button data-page="reporters">প্রতিবেদক</button>
-      <button data-page="ads">বিজ্ঞাপন</button>
-      <button data-page="site">সাইট সেটিংস</button>
-      <button data-page="typography">ফন্ট / স্টাইল</button>
-      <button data-page="ownership">সম্পাদক / স্বত্বাধিকার</button>
-      <button data-page="contact">যোগাযোগ</button>
-      <button data-page="trash">ট্র্যাশ</button>
+    <nav class="nav navSimple">
+      <button data-page="dashboard" class="active navPrimary">⌂ হোম</button>
+      <details class="navGroup" open>
+        <summary>▤ সংবাদ <span>⌄</span></summary>
+        <div class="navSub">
+          <button data-page="news">সকল সংবাদ</button>
+          <button data-page="breaking">ব্রেকিং নিউজ</button>
+          <button data-page="categories">ক্যাটাগরি</button>
+          <button data-page="reporters">প্রতিবেদক</button>
+        </div>
+      </details>
+      <button data-page="ads" class="navPrimary">▭ বিজ্ঞাপন</button>
+      <a class="navLiveSite" href="https://cupandgo-ksa.github.io/haimcharnews24bd/" target="_blank" rel="noopener">🌐 লাইভ ওয়েবসাইট</a>
+      <details class="navGroup">
+        <summary>⚙ সাইট সেটিংস <span>⌄</span></summary>
+        <div class="navSub">
+          <button data-page="site">লোগো / সাইট</button>
+          <button data-page="typography">ফন্ট / স্টাইল</button>
+          <button data-page="ownership">সম্পাদক / স্বত্বাধিকার</button>
+          <button data-page="contact">যোগাযোগ</button>
+        </div>
+      </details>
+      <button data-page="trash" class="navPrimary navTrash">♲ ট্র্যাশ</button>
     </nav>
-    <div class="sideBottom">
-      <a class="siteLink" href="index.html" target="_blank" data-i18n="viewSite">◉ ওয়েবসাইট দেখুন</a>
-    </div>
+    <div class="sideBottom"></div>
   </aside>
 
   <main class="main">
@@ -938,6 +1013,7 @@ transition:.22s ease}
   </form>
 </div>
 
+<div id="saveFeedbackToast" role="status" aria-live="polite"></div>
 <div id="toast" class="toast hide"></div>
 
 <script type="module">
@@ -952,12 +1028,15 @@ function saveFeedback(message="কাজটি প্রক্রিয়াধ
   saveFeedbackTimer=setTimeout(()=>saveFeedbackToast.classList.remove("show"),1800);
 }
 document.addEventListener("click",(e)=>{
-  const b=e.target.closest("button,input[type='submit']");
+  const b=e.target.closest("button,input[type='submit'],.filePick,.navLiveSite");
   if(!b)return;
-  const txt=((b.textContent||b.value||"")+" "+(b.id||"")).trim();
-  if(/সংরক্ষণ|সেভ|আপডেট|পরিবর্তন|যোগ করুন|publish|save|update|submit/i.test(txt)){
-    saveFeedback("কাজটি প্রক্রিয়াধীন…");
-  }
+  const txt=((b.textContent||b.value||"")+" "+(b.id||"")+" "+(b.className||"")).trim();
+  let message="";
+  if(/upload|আপলোড|filePick|image/i.test(txt)) message=lang==="en"?"Uploading / preparing…":"আপলোড / প্রস্তুত হচ্ছে…";
+  else if(/edit|এডিট|সম্পাদনা|preview|প্রিভিউ/i.test(txt)) message=lang==="en"?"Opening…":"খোলা হচ্ছে…";
+  else if(/সংরক্ষণ|সেভ|আপডেট|পরিবর্তন|যোগ করুন|publish|প্রকাশ|save|update|submit/i.test(txt)) message=lang==="en"?"Processing…":"কাজটি প্রক্রিয়াধীন…";
+  else if(b.classList?.contains("navLiveSite")) message=lang==="en"?"Opening live website…":"লাইভ ওয়েবসাইট খোলা হচ্ছে…";
+  if(message) saveFeedback(message);
 },true);
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
@@ -1004,6 +1083,7 @@ const els = {
 
 let lang = localStorage.getItem("admin_lang") || "bn";
 let currentPage = "dashboard";
+let loginTransitionPending = false;
 let items = [];
 let settings = { name:"হাইমচর নিউজ24BD", logoUrl:"", tagline:"হাইমচরের কথা, মানুষের কণ্ঠে" };
 let newsUnsub = null, settingsUnsub = null;
@@ -1023,7 +1103,7 @@ let publicStatsUnsub=null, adStatsUnsub=null, adsUnsub=null, reportersUnsub=null
 
 const i18n = {
   bn:{
-    welcome:"স্বাগতম",loginSub:"সংবাদ প্রকাশ ও ওয়েবসাইট পরিচালনা করতে লগইন করুন",email:"Admin ইমেইল",password:"পাসওয়ার্ড",
+    welcome:"স্বাগতম",loginSub:"সংবাদ প্রকাশ ও ওয়েবসাইট পরিচালনা করতে লগইন করুন",email:"ইমেইল",password:"পাসওয়ার্ড",
     secureLogin:"নিরাপদ লগইন",dashboard:"▦ ড্যাশবোর্ড",allNews:"▤ সকল সংবাদ",breaking:"📣 ব্রেকিং নিউজ",categories:"▦ ক্যাটাগরি",ads:"▭ বিজ্ঞাপন",siteSettingsNav:"⚙ সাইট সেটিংস",footerSettingsNav:"⌁ ফুটার/যোগাযোগ",settings:"⚙ সেটিংস",
     viewSite:"◉ ওয়েবসাইট দেখুন",logout:"বের হোন",newNews:"＋ নতুন সংবাদ",newNewsTitle:"নতুন সংবাদ",editNewsTitle:"সংবাদ সম্পাদনা",
     title:"শিরোনাম",category:"ক্যাটাগরি",status:"অবস্থা",published:"প্রকাশিত",draft:"খসড়া",excerpt:"সংক্ষিপ্ত বিবরণ",
@@ -1196,20 +1276,23 @@ els.loginForm.addEventListener("submit", async (e)=>{
   const email = els.emailInput.value.trim();
   const password = els.passwordInput.value;
   if(!email || !password){ els.loginError.textContent=t("fillRequired"); els.loginError.classList.remove("hide"); return; }
-  startLoad(); els.loginSubmit.disabled=true; els.loginSubmit.textContent=t("loginLoading");
+  startLoad(); els.loginSubmit.disabled=true; els.loginSubmit.classList.add("loginBusy"); els.loginSubmit.textContent=t("loginLoading");
   try{
     try{ await setPersistence(auth, browserLocalPersistence); }catch(_){}
+    loginTransitionPending=true;
     await signInWithEmailAndPassword(auth,email,password);
   }catch(err){
     console.error(err);
+    loginTransitionPending=false;
     els.loginError.textContent=t("loginFailed"); els.loginError.classList.remove("hide");
   }finally{
-    els.loginSubmit.disabled=false; els.loginSubmit.textContent=t("secureLogin"); endLoad();
+    if(!loginTransitionPending){ els.loginSubmit.disabled=false; els.loginSubmit.classList.remove("loginBusy","loginOk"); els.loginSubmit.textContent=t("secureLogin"); endLoad(); }
   }
 });
 
 els.logoutBtn.onclick = ()=>signOut(auth);
 els.menuBtn.onclick = ()=>els.sidebar.classList.toggle("open");
+document.querySelectorAll(".navLiveSite").forEach(a=>a.addEventListener("click",()=>els.sidebar.classList.remove("open")));
 document.addEventListener("click",(e)=>{
   if(innerWidth<=980 && els.sidebar.classList.contains("open") && !els.sidebar.contains(e.target) && e.target!==els.menuBtn){
     els.sidebar.classList.remove("open");
@@ -1223,6 +1306,7 @@ document.addEventListener("click",(e)=>{
 function setAdminPage(page){
   currentPage=page||"dashboard";
   document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===currentPage));
+  const activeBtn=document.querySelector(`.nav button[data-page="${currentPage}"]`); activeBtn?.closest("details")?.setAttribute("open","");
   els.sidebar.classList.remove("open");
   render();
 }
@@ -1864,8 +1948,38 @@ function wireRows(){
 
 onAuthStateChanged(auth,(user)=>{
   const logged=!!user;
-  els.loginView.classList.toggle("hide",logged);
-  els.appView.classList.toggle("hide",!logged);
+  const gate=$("adminEntryGate"), gateTitle=$("adminEntryTitle"), gateSub=$("adminEntrySub");
+  if(logged){
+    // v26: a restored Firebase session must not skip the login screen.
+    // Only an explicit press of the login button may continue to the dashboard.
+    if(!loginTransitionPending){
+      signOut(auth).catch(console.error);
+      els.appView.classList.add("hide");
+      els.loginView.classList.remove("hide");
+      gate?.classList.add("hideGate");
+      return;
+    }
+    // Explicit successful login: pass through the centered dashboard transition.
+    els.loginView.classList.add("hide");
+    els.appView.classList.add("hide");
+    if(gateTitle) gateTitle.textContent=lang==="bn"?"ড্যাশবোর্ড প্রস্তুত হচ্ছে":"Preparing dashboard";
+    if(gateSub) gateSub.textContent=lang==="bn"?"অ্যাডমিন প্যানেল খোলা হচ্ছে…":"Opening admin panel…";
+    gate?.classList.remove("hideGate");
+    if(loginTransitionPending){
+      els.loginSubmit.classList.remove("loginBusy"); els.loginSubmit.classList.add("loginOk");
+      els.loginSubmit.textContent=lang==="bn"?"✓ সফল":"✓ Success";
+    }
+    setTimeout(()=>{
+      gate?.classList.add("hideGate");
+      els.appView.classList.remove("hide");
+      els.loginSubmit.disabled=false; els.loginSubmit.classList.remove("loginBusy","loginOk"); els.loginSubmit.textContent=t("secureLogin");
+      loginTransitionPending=false; endLoad();
+    },850);
+  }else{
+    gate?.classList.add("hideGate");
+    els.loginView.classList.remove("hide");
+    els.appView.classList.add("hide");
+  }
   if(newsUnsub){newsUnsub();newsUnsub=null}
   if(settingsUnsub){settingsUnsub();settingsUnsub=null}
   if(categoriesUnsub){categoriesUnsub();categoriesUnsub=null}
@@ -1916,13 +2030,9 @@ onAuthStateChanged(auth,(user)=>{
 });
 
 setLang(lang);
-if(sessionStorage.getItem("admin_intro_seen")){
-  $("adminIntro")?.remove();
-}else{
-  sessionStorage.setItem("admin_intro_seen","1");
-  setTimeout(()=>$("adminIntro")?.classList.add("hideIntro"),1200);
-  setTimeout(()=>$("adminIntro")?.remove(),1750);
-}
+// v26: show the branded intro on every fresh page load, then reveal login smoothly.
+setTimeout(()=>$('adminIntro')?.classList.add('hideIntro'),1450);
+setTimeout(()=>$('adminIntro')?.remove(),2000);
 
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("./admin-sw.js").catch(console.warn));
